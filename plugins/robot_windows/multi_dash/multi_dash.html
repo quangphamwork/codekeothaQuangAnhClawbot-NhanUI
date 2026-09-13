@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>S4V - Webots Dashboard - 01.39.05 (Auto-Run Fixed)</title>
+    <style>
+        /* =========================================
+           HỆ THỐNG MÀU 1: LIGHT (Mặc định)
+           ========================================= */
+        :root {
+            --bg-body: #ffffff; 
+            --bg-header: #f4f6f8; 
+            --text-header: #333333; 
+            --bg-panel: #f0f0f0; 
+            --border-color: #dcdcdc;
+            
+            --console-bg: #fafafa; 
+            --console-header-bg: #e9ecef; 
+            --console-text: #24292e; 
+            --console-line-num: #babbbd; 
+            --console-border: #e1e4e8;   
+            
+            --toolbox-bg: #f8f9fa; 
+            --toolbox-text: #333333;
+            --brand-text: #666666;
+            
+            --brand-box-bg: #ffffff; 
+            --brand-shadow: rgba(0, 0, 0, 0.08); 
+            
+            --sb-track: #fafafa; 
+            --sb-thumb: #c1c1c1;
+            --sb-thumb-hover: #a8a8a8;
+        }
+        
+        /* =========================================
+           HỆ THỐNG MÀU 2: DARK (Cổ điển)
+           ========================================= */
+        [data-theme="dark"] {
+            --bg-body: #1e1e1e; 
+            --bg-header: #252526; 
+            --text-header: #ffffff; 
+            --bg-panel: #2d2d2d; 
+            --border-color: #444444;
+            
+            --console-bg: #000000; 
+            --console-header-bg: #252526;
+            --console-text: #4ec9b0; 
+            --console-line-num: #858585; 
+            --console-border: #333333;
+            
+            --toolbox-bg: #252526; 
+            --toolbox-text: #cccccc;
+            --brand-text: #aaaaaa;
+            
+            --brand-box-bg: #1a1a1a; 
+            --brand-shadow: rgba(0, 0, 0, 0.6); 
+            
+            --sb-track: #000000; 
+            --sb-thumb: #424242;
+            --sb-thumb-hover: #555555;
+        }
+
+        /* =========================================
+           HỆ THỐNG MÀU 3: KIMBIE DARK (Nâu đất)
+           ========================================= */
+        [data-theme="kimbie"] {
+            --bg-body: #221a0f; 
+            --bg-header: #362712; 
+            --text-header: #d3af86; 
+            --bg-panel: #4a361a; 
+            --border-color: #5c4525;
+            
+            --console-bg: #1a130a; 
+            --console-header-bg: #362712;
+            --console-text: #889b4a; 
+            --console-line-num: #795b36; 
+            --console-border: #4a361a;
+            
+            --toolbox-bg: #362712; 
+            --toolbox-text: #d3af86;
+            --brand-text: #9d8061;
+            
+            --brand-box-bg: #2e2214; 
+            --brand-shadow: rgba(0, 0, 0, 0.7); 
+            
+            --sb-track: #1a130a; 
+            --sb-thumb: #5c4525;
+            --sb-thumb-hover: #795b36;
+        }
+
+        /* =========================================
+           HỆ THỐNG MÀU 4: MONOKAI (Đen nhám Neon)
+           ========================================= */
+        [data-theme="monokai"] {
+            --bg-body: #272822; 
+            --bg-header: #1e1f1c; 
+            --text-header: #f8f8f2; 
+            --bg-panel: #3e3d32; 
+            --border-color: #49483e;
+            
+            --console-bg: #171814; 
+            --console-header-bg: #1e1f1c;
+            --console-text: #a6e22e; 
+            --console-line-num: #75715e; 
+            --console-border: #49483e;
+            
+            --toolbox-bg: #1e1f1c; 
+            --toolbox-text: #f8f8f2;
+            --brand-text: #75715e;
+            
+            --brand-box-bg: #272822; 
+            --brand-shadow: rgba(0, 0, 0, 0.8); 
+            
+            --sb-track: #171814; 
+            --sb-thumb: #49483e;
+            --sb-thumb-hover: #75715e;
+        }
+
+        * { scrollbar-width: thin; scrollbar-color: var(--sb-thumb) var(--sb-track); }
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: var(--sb-track); }
+        ::-webkit-scrollbar-thumb { background-color: var(--sb-thumb); border-radius: 6px; border: 3px solid var(--sb-track); }
+        ::-webkit-scrollbar-thumb:hover { background-color: var(--sb-thumb-hover); }
+
+        html, body { height: 100vh; width: 100vw; margin: 0; padding: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: var(--bg-body); display: flex; flex-direction: column; transition: background-color 0.3s; }
+        
+/* =========================================
+           CHUẨN HÓA THANH HEADER 2 TẦNG
+           ========================================= */
+        #headerBar { 
+            min-height: 50px; /* Hủy bỏ khóa cứng chiều cao */
+            flex-shrink: 0; 
+            background: var(--bg-header); 
+            color: var(--text-header); 
+            display: flex; 
+            flex-direction: column; /* Ép dọc thành 2 dòng */
+            padding: 10px 15px; 
+            gap: 12px; /* Khoảng cách giữa 2 dòng */
+            border-bottom: 1px solid var(--border-color); 
+            box-shadow: 0 2px 5px var(--brand-shadow); 
+            z-index: 1000; 
+            overflow-x: hidden !important; 
+        }
+
+        .header-row-1 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; /* Đẩy tên sang trái, nút sang phải */
+            width: 100%;
+        }
+
+        .header-row-2 {
+            display: flex;
+            align-items: center;
+            justify-content: center; /* CHÌA KHÓA CĂN GIỮA CHIA ĐỀU TẠI ĐÂY */
+            gap: 30px; /* Giãn cách thoáng hơn */
+            width: 100%;
+            overflow-x: auto; 
+            padding-bottom: 5px;
+        }
+
+        /* Thẩm mỹ thanh cuộn cho dòng 2 */
+        .header-row-2::-webkit-scrollbar { height: 6px; }
+        .header-row-2::-webkit-scrollbar-thumb { background-color: var(--sb-thumb); border-radius: 4px; }
+        .header-row-2::-webkit-scrollbar-track { background: transparent; }
+
+        /* Ép cứng định dạng nút NẠP CODE ở tầng tối cao */
+        #btnImport { 
+            background: linear-gradient(135deg, #9C27B0, #E040FB) !important; 
+            border-radius: 20px !important; 
+            padding: 0 24px !important; 
+            font-weight: 800 !important;
+            font-size: 13.5px !important;
+            font-family: 'Segoe UI', sans-serif !important;
+            letter-spacing: 1px !important;
+            color: white !important;
+            border: 1px solid rgba(255,255,255,0.3) !important;
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4) !important;
+            cursor: pointer !important;
+            height: 38px !important;
+            min-width: 140px !important; 
+            flex-shrink: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        #btnImport:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(156, 39, 176, 0.6) !important;
+            background: linear-gradient(135deg, #AB47BC, #EA80FC) !important;
+        }
+        #btnImport:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 8px rgba(156, 39, 176, 0.4);
+        }
+        
+        .nav-dropdown { 
+            /* QUYỀN LỰC TUYỆT ĐỐI: Thoát khỏi mọi lồng giam không gian của Header */
+            position: fixed !important; 
+            
+            /* Xóa top và right ở đây, JS sẽ tự động tính toán để neo vào nút */
+            
+            background: var(--brand-box-bg); 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            box-shadow: 0 8px 20px var(--brand-shadow); 
+            display: none; 
+            flex-direction: column; 
+            min-width: 170px; 
+            z-index: 99999; /* Đẩy lên chóp đỉnh của DOM */
+            overflow: visible !important; 
+        }
+        
+        .nav-dropdown.show { display: flex !important; }
+
+        /* Ép bo góc lại cho các thẻ do đã xóa overflow: hidden */
+        .nav-item:first-child { border-radius: 8px 8px 0 0; }
+        .nav-item:last-child { border-radius: 0 0 8px 8px; border-bottom: none; }
+
+        /* =========================================
+           CẤU TRÚC SUB-MENU XẾP TẦNG (CASCADING)
+           ========================================= */
+        .nav-item.has-submenu {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            overflow: visible !important; 
+        }
+        
+        .nav-item.has-submenu::after {
+            content: "▸"; /* Mũi tên chỉ hướng mở menu */
+            font-size: 14px;
+            opacity: 0.5;
+            margin-left: 10px;
+        }
+
+        .nav-submenu {
+            position: fixed !important; /* Buộc trình duyệt định vị theo tọa độ màn hình thực tế */
+            background: var(--brand-box-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px var(--brand-shadow); 
+            display: none; /* Mặc định ẩn */
+            flex-direction: column;
+            min-width: 170px;
+            z-index: 100000; /* Đẩy lên lớp hiển thị cao nhất */
+            cursor: default;
+            max-height: calc(100vh - 80px); 
+            overflow-y: auto; 
+        }
+        /* "Chiếc cầu tàng hình" để chuột đi từ menu mẹ sang con không bị mất Focus */
+        .nav-item.has-submenu::before {
+            content: ""; position: absolute; right: 100%; top: 0; width: 15px; height: 100%; background: transparent;
+        }
+
+        /* Mở Sub-menu khi hover vào thẻ mẹ */
+        .nav-item.has-submenu:hover > .nav-submenu {
+            display: flex;
+        }   
+        #projectTitleContainer { display: flex; align-items: center; background: var(--brand-box-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 4px 10px; gap: 8px; box-shadow: inset 0 1px 3px var(--brand-shadow); transition: all 0.3s; }
+        #projectName { margin: 0; padding: 0; border: none; outline: none; min-width: 120px; font-size: 16px; color: var(--text-header); background: transparent; font-weight: 800; letter-spacing: 0.5px; cursor: default; }
+        #projectName[contenteditable="true"] { cursor: text; border-bottom: 2px solid #1976D2; color: #1976D2; }
+        #btnEditName { background: none; border: none; color: var(--brand-text); cursor: pointer; font-size: 14px; padding: 2px; transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
+        #btnEditName:hover { color: #1976D2; transform: scale(1.1); }
+
+        #simDashboard { display: flex; align-items: center; gap: 15px; background: var(--brand-box-bg); padding: 5px 20px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: inset 0 1px 3px var(--brand-shadow); transition: all 0.3s;}
+        .sim-btn { background: none; border: none; color: var(--brand-text); cursor: pointer; font-size: 20px; width: 30px; text-align: center; transition: all 0.2s; }
+        .sim-btn:hover { color: var(--text-header); transform: scale(1.2); }
+        #btnSimReset:hover { color: #d32f2f; text-shadow: 0 0 5px rgba(211,47,47,0.4); } 
+        #btnSimPlay:hover { color: #2e7d32; text-shadow: 0 0 5px rgba(46,125,50,0.4);}
+        #timerDisplay { font-family: 'Consolas', monospace; font-size: 18px; color: #1976D2; min-width: 80px; text-align: center; border-left: 1px solid var(--border-color); padding-left: 15px; margin-left: 5px; font-weight: bold;}
+        
+        [data-theme="dark"] #timerDisplay, [data-theme="monokai"] #timerDisplay { color: #4ec9b0; text-shadow: 0 0 2px #4ec9b0; }
+        [data-theme="kimbie"] #timerDisplay { color: #f06c00; text-shadow: 0 0 2px #f06c00; }
+        [data-theme="dark"] #btnSimReset:hover, [data-theme="monokai"] #btnSimReset:hover, [data-theme="kimbie"] #btnSimReset:hover { color: #ff6b6b; text-shadow: 0 0 5px #ff6b6b; } 
+        [data-theme="dark"] #btnSimPlay:hover, [data-theme="monokai"] #btnSimPlay:hover, [data-theme="kimbie"] #btnSimPlay:hover { color: #51cf66; text-shadow: 0 0 5px #51cf66;}
+
+        #rightControls { display: flex; align-items: center; gap: 10px; }
+        button.tool-btn { font-weight: 600; padding: 0 15px; border: none; color: white; border-radius: 4px; font-size: 13px; height: 34px; cursor: pointer; transition: opacity 0.2s; box-shadow: 0 2px 4px var(--brand-shadow); letter-spacing: 0.5px;}
+        button.tool-btn:hover { opacity: 0.8; transform: translateY(-1px); }
+        button.tool-btn:active { transform: translateY(1px); box-shadow: none; }
+        #btnImport { background-color: #9C27B0; } #btnSave { background-color: #1976D2; } #btnFiles { background-color: #FFA000; color: #333; } #btnClear { background-color: #d32f2f; } 
+        #btnHelp { background-color: #009688; } 
+        #btnToggleCode { background-color: #5C6BC0; }
+        
+        .circle-btn { background: none; border: 1px solid var(--text-header); color: var(--text-header); border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.3s;}
+        .circle-btn:hover { background: var(--border-color); }
+        
+        #mainLayout { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
+        #blocklyContainer { 
+            flex: 3; 
+            height: 100%; 
+            position: relative; 
+            border-right: 4px solid var(--border-color); 
+            min-width: 0; 
+        }
+        #blocklyDiv { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+        
+        #codeContainer { 
+            flex: 1; 
+            background: var(--console-bg); 
+            color: var(--console-text); 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            min-width: 0; 
+        }
+        #mainLayout.code-hidden #codeContainer { display: none; }
+        #mainLayout.code-hidden #blocklyContainer { flex: 1; border-right: none; }
+        .console-header { padding: 8px 10px; background: var(--console-header-bg); color: var(--text-header); font-size: 13px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; font-family: 'Consolas', monospace; letter-spacing: 1px; font-weight: bold; transition: all 0.3s;}
+        
+        #codeOutput { margin: 0; padding: 10px 0; font-family: 'Consolas', monospace; font-size: 14px; overflow: auto; flex-grow: 1; counter-reset: line; }
+        .code-line { display: block; line-height: 1.6; white-space: pre; min-width: 100%; width: fit-content; }
+        .code-line::before { counter-increment: line; content: counter(line); display: inline-block; width: 35px; margin-right: 12px; padding-right: 8px; color: var(--console-line-num); border-right: 1px solid var(--console-border); text-align: right; user-select: none; font-size: 12px; position: sticky; left: 0; background-color: var(--console-bg); transition: all 0.3s; }
+
+        .console-footer { display: none; }
+        .console-footer-left { display: flex; gap: 15px; align-items: center; font-weight: bold;}
+        .console-footer-right button { background: none; border: 1px solid var(--border-color); color: var(--text-header); cursor: pointer; border-radius: 4px; padding: 4px 10px; font-size: 11px; font-family: inherit; font-weight: bold; transition: all 0.2s; }
+        .console-footer-right button:hover { background: var(--border-color); transform: scale(1.05); }
+
+       /* =========================================
+           LỘT XÁC MODAL THÀNH SIDE DRAWER TỰA IDE
+           ========================================= */
+        .modal { 
+            display: none; /* Chỉ mở wrapper khi cần để tránh lỗi click */
+            position: fixed; 
+            z-index: 9999; 
+            left: 0; 
+            top: 50px; /* Bám ngay dưới thanh Header */
+            width: 100%; 
+            height: calc(100vh - 50px); 
+            background-color: transparent; /* Loại bỏ nền đen cản trở */
+            pointer-events: none; /* Mắt xích lõi: Cho phép click xuyên qua vùng trống xuống sa bàn */
+        }
+        
+        .modal.show-drawer { display: block; }
+        
+        .modal-content { 
+            position: absolute; 
+            right: -450px; /* Bắt đầu bằng việc giấu kỹ ngoài mép phải */
+            top: 0; 
+            margin: 0; 
+            padding: 25px; 
+            width: 380px; 
+            height: 100%; 
+            background-color: var(--brand-box-bg); /* Tự động đổi màu theo Theme */
+            color: var(--text-header);
+            border-left: 1px solid var(--border-color);
+            border-radius: 0; 
+            box-shadow: -5px 0 25px rgba(0,0,0,0.15); 
+            box-sizing: border-box;
+            overflow-y: auto;
+            pointer-events: auto; /* Trả lại tương tác vật lý cho phần ngăn kéo */
+            transition: right 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        .modal.show-drawer .modal-content { 
+            right: 0; /* Hiệu ứng kéo ngăn kéo ra */
+        }
+
+        /* Đồng bộ màu chữ và giao diện cho bên trong Drawer */
+        .modal-content h3 { color: var(--text-header); margin-top: 0; }
+        #notesModal .modal-content p, #notesModal .modal-content hr { color: var(--text-header); opacity: 0.85; border-color: var(--border-color); }
+        .file-item { padding: 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; justify-content: space-between; transition: background 0.2s; font-weight: 500; color: var(--text-header); }
+        .file-item:hover { background-color: rgba(128,128,128,0.15); border-radius: 6px; }
+        .delete-icon { color: #d32f2f; font-weight: bold; cursor: pointer; font-size: 18px; padding: 0 5px; }
+        .delete-icon:hover { transform: scale(1.2); }
+        /* =========================================
+           1. LỘT XÁC THANH TOOLBOX (SIGNATURE VIBE)
+           ========================================= */
+        /* =========================================
+           SỬA LỖI TRÀN ĐÁY TOOLBOX VÀ BẬT THANH CUỘN
+           ========================================= */
+        .blocklyToolboxDiv { 
+            min-width: 180px !important; 
+            padding-top: 66px !important; 
+            padding-bottom: 50px !important; 
+            background-color: var(--toolbox-bg) !important; 
+            border-right: 1px solid var(--border-color); 
+            z-index: 100 !important;
+            
+            /* BÍ QUYẾT: Ép Padding chui vào bên trong Height */
+            box-sizing: border-box !important; 
+            
+            /* Kích hoạt cơ chế cuộn dọc, khóa cuộn ngang */
+            overflow-y: auto !important; 
+            overflow-x: hidden !important;
+        }
+
+        /* Thẩm mỹ lại thanh cuộn của Sidebar cho đồng bộ */
+        .blocklyToolboxDiv::-webkit-scrollbar {
+            width: 4px; /* Thanh cuộn siêu mỏng 4px */
+        }
+        .blocklyToolboxDiv::-webkit-scrollbar-thumb {
+            background-color: var(--sb-thumb);
+            border-radius: 4px;
+        }
+        .blocklyToolboxDiv::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* 2. Tinh chỉnh các nút danh mục */
+        .blocklyTreeLabel { 
+            font-size: 14px !important; 
+            font-family: 'Segoe UI', sans-serif !important; 
+            padding-right: 15px !important; 
+            font-weight: 700; 
+            letter-spacing: 0.5px;
+        }
+        
+        .blocklyTreeRow { 
+            height: 38px !important; 
+            line-height: 38px !important; 
+            margin: 4px 8px 4px 8px !important; /* Tạo khoảng lùi hai bên */
+            border-radius: 8px !important; /* Bo góc mềm mại */
+            transition: all 0.2s ease; 
+        }
+        
+        /* Hiệu ứng trượt khi rê chuột */
+        .blocklyTreeRow:hover { 
+            background-color: rgba(128, 128, 128, 0.1) !important;
+            transform: translateX(4px); 
+        }
+
+        /* =========================================
+           3. CỐ ĐỊNH LOGO Ở TRÊN CÙNG BÊN TRÁI
+           ========================================= */
+        /* =========================================
+           1. CÂN BẰNG KHUNG HEADER VÀ SỰ TƯƠNG PHẢN
+           ========================================= */
+        #signatureHeader {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 180px;
+            height: 56px; /* Tăng thêm 6px để tạo khoảng thở */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px; /* Bóp chặt khoảng cách giữa 2 logo */
+            background-color: var(--brand-box-bg); /* Dùng màu nền Box để sáng hơn nền Toolbox */
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 6px var(--brand-shadow);
+            z-index: 110;
+        }
+
+        .signature-logo {
+            max-height: 30px;
+            max-width: 42%;
+            object-fit: contain;
+            /* Đổ bóng nhẹ để tách logo STEAM xanh khỏi nền tối */
+            filter: drop-shadow(0px 1px 3px rgba(255, 255, 255, 0.2)); 
+            transition: transform 0.2s ease;
+        }
+        
+        .signature-logo:hover {
+            transform: scale(1.08);
+        }
+
+        /* =========================================
+           2. SỬA LỖI BO GÓC THẺ DANH MỤC (FIX CLIPPING)
+           ========================================= */
+        .blocklyToolboxDiv { 
+            min-width: 180px !important; 
+            padding-top: 66px !important; /* Đồng bộ với chiều cao Header 56px + 10px lề */
+            padding-bottom: 50px !important; 
+            background-color: var(--toolbox-bg) !important; 
+            border-right: 1px solid var(--border-color); 
+            z-index: 100 !important;
+        }
+
+        /* =========================================
+           (Bo tròn toàn diện)
+           ========================================= */
+        .blocklyTreeRow { 
+            height: 42px !important; /* Tăng độ béo cho bong bóng */
+            line-height: 42px !important; 
+            
+            /* Lùi vào sâu hơn, ép ngắn thẻ lại để tạo cảm giác lơ lửng */
+            margin: 6px 12px !important; 
+            
+            /* Bo tròn tuyệt đối hai đầu như viên thuốc */
+            border-radius: 25px !important; 
+            
+            /* THỦ THUẬT: Tăng viền màu lên 16px, nó sẽ uốn cong theo viền thẻ tạo thành một hình bán nguyệt màu sắc cực đẹp */
+            border-left-width: 16px !important; 
+            
+            padding-left: 12px !important; 
+            
+            /* Nền mờ tĩnh điện cho từng nút */
+            background-color: rgba(0, 0, 0, 0.15) !important; 
+            overflow: hidden !important; 
+            
+            /* Chuyển động nảy (Bouncy) */
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important; 
+        }
+
+        /* Hiệu ứng phình to khi rê chuột */
+        .blocklyTreeRow:hover {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            transform: scale(1.03); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* Trạng thái được chọn (Nhấn chìm & Sáng rực) */
+        .blocklyTreeSelected {
+            background-color: rgba(255, 255, 255, 0.12) !important;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1), 0 6px 15px rgba(0,0,0,0.2) !important;
+            transform: scale(1.05);
+        }
+
+        /* =========================================
+           SCRATCH-STYLE DROPDOWN & CASCADING MENUS
+           ========================================= */
+        .nav-menu-container { position: relative; }
+        
+        .nav-menu-btn { 
+            background: transparent; border: none; color: var(--text-header); 
+            font-weight: 700; cursor: pointer; padding: 8px 12px; 
+            border-radius: 6px; transition: background 0.2s; font-size: 14px; 
+        }
+        .nav-menu-btn:hover { background: rgba(128, 128, 128, 0.15); }
+        
+        .nav-dropdown { 
+            position: absolute; top: 45px; right: 0; 
+            background: var(--brand-box-bg); border: 1px solid var(--border-color); 
+            border-radius: 8px; box-shadow: 0 8px 20px var(--brand-shadow); 
+            display: none; flex-direction: column; min-width: 170px; 
+            z-index: 9999; 
+            overflow: visible !important; /* Mở khóa không gian để Sub-menu trồi ra */
+        }
+        
+        .nav-dropdown.show { display: flex !important; }
+        
+        .nav-item { 
+            padding: 12px 15px; color: var(--toolbox-text); cursor: pointer; 
+            font-size: 13.5px; font-weight: 600; border-bottom: 1px solid var(--border-color); 
+            transition: all 0.2s; 
+        }
+        .nav-item:first-child { border-radius: 8px 8px 0 0; }
+        .nav-item:last-child { border-radius: 0 0 8px 8px; border-bottom: none; }
+        .nav-item:hover { background: rgba(128, 128, 128, 0.12); color: #1976D2; padding-left: 20px; }
+
+        /* =========================================
+           CẤU TRÚC SUB-MENU XẾP TẦNG (CASCADING)
+           ========================================= */
+        .nav-item.has-submenu {
+            position: relative; display: flex; justify-content: space-between;
+            align-items: center; overflow: visible !important; 
+        }
+        
+        .nav-item.has-submenu::after { content: "▸"; font-size: 14px; opacity: 0.5; margin-left: 10px; }
+
+        .nav-submenu {
+            position: absolute; right: 100%; top: -5px; margin-right: 5px; 
+            background: var(--brand-box-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; box-shadow: -4px 4px 15px var(--brand-shadow); 
+            display: none; flex-direction: column; min-width: 160px; z-index: 10000; cursor: default;
+        }
+
+        .nav-item.has-submenu::before {
+            content: ""; position: absolute; right: 100%; top: 0; width: 15px; height: 100%; background: transparent;
+        }
+
+        .nav-item.has-submenu:hover > .nav-submenu { display: flex; }
+    </style>
+
+    <script>
+        var currentLang = localStorage.getItem('blockly_lang') || 'en';
+        var currentThemeObj = localStorage.getItem('blockly_theme') || 'light'; 
+        window.currentGeneratedCode = "";
+        window.currentDisplayCode = "";
+
+        const translations = {
+            'en': {
+                'importBtn': 'IMPORT CODE', 'saveBtn': 'SAVE', 'filesBtn': 'FILES', 'clearBtn': 'CLEAR', 'helpBtn': 'NOTES',
+                'consoleTitle': '>_ PYTHON OUTPUT', 'consoleWait': 'Waiting for code...', 'modalTitle': 'Saved Projects', 'emptyFiles': 'Empty',
+                'catVars': 'Variables', 'catFuncs': 'Functions', 'catMotors': 'Motors', 'catGripper': 'Gripper', 'catTime': 'Time', 'catSensors': 'Sensors', 'catControl': 'Control', 'catLists': 'Lists', 'catMath': 'Math', 'catCamera': 'Camera', 'catOther': 'Other',
+                'b_toList': 'to list', 'b_append': 'append', 'b_abs': 'abs', 'b_mod': 'mod', 'b_by': 'by', 'b_round': 'round', 'b_decimals': 'decimal places', 'b_createText': 'create text with', 'b_text': 'text',
+                
+                'b_start': '🏁 Start', 'b_end': '🛑 End',
+                'b_goForward': '⬆️ go forward', 'b_goBackward': '⬇️ go backward', 'b_turnLeft': '↪️ turn left', 'b_turnRight': '↩️ turn right', 'b_delay': '⏱️ delay (s)', 'b_getTime': '⏳ getTime', 'b_resetTime': '🔄 resetTime', 'b_print': '🖨️ print',
+                'b_getDistance': '📡 read distance sensor',
+                'b_grip': '🦾 grip', 'b_release': '✋ release', 'b_armUp': '⬆️ arm up', 'b_armDown': '⬇️ arm down',
+                'b_while': 'while',
+                'b_do': 'do',
+                'b_stopAll': '🛑 stop(all)',
+
+                'poweredBy': 'Powered by',
+                'noteTitle': '⚠️ QUICK NOTES',
+                'noteLine1': 'If you accidentally close the web, right-click on the Robot Node (Webots) -> Show Robot Window.',
+                'noteLine2': 'Make sure Webots is running and the robot is active.',
+
+                'menuThemeTitle': '🎨 Theme',
+                
+                'aiBtnText': 'S4V Assistant',
+                'aiMenuGuide': 'User Guide (Blocks)',
+                'aiMenuGemini': 'Gemini (In development)',
+
+                'menuZoomIn': 'Zoom In (+)',
+                'menuZoomOut': 'Zoom Out (-)',
+                'menuCenter': 'Center Workspace',
+
+                'copyBtn': '📋 Copy All',
+                'lineCountStr': 'lines',
+
+                'notesModalTitle': 'General Settings & Workflow',
+                'notesModalContent': `
+                    <p><b>1. Workflow:</b> Assemble your blocks &rarr; Click <b>IMPORT CODE</b> (runs immediately). Use <b>Pause</b> then <b>Play</b> only if you need to stop/resume.</p>
+                    <p><b>2. Resetting:</b> Click the Reset (⏮) button to instantly return the robot to its starting position.</p>
+                    <p><b>3. Themes:</b> Use the 🎨 button on the top right to switch between VS Code themes.</p>
+                    <p><b>4. Language:</b> Use the ENG/VIE button to switch languages instantly.</p>
+                    <p><b>5. Saving:</b> Click the SAVE button to store your current blocks in the browser's memory. Your blocks will be automatically loaded the next time you open the dashboard.</p>
+                    <p><b>6. Files:</b> Click the FILES button to view and manage your saved projects.</p>
+                    <hr>
+                    <p style="font-size:12px; color:#666;"><i>Note: This dashboard communicates via Localhost WebSockets.</i></p>
+                `,
+
+                'blockGuideTitle': 'Block Usage Guide',
+                'blockGuideContent': `
+                    <p><b>1. Motors:</b> Use movement blocks <i>go forward / go backward / turn left / turn right</i> with speed 0..100%.</p>
+                    <p><b>2. Legacy projects:</b> Old motor blocks are auto-mapped at runtime for backward-compatible behavior.</p>
+                    <p><b>3. Simulation status:</b> The blocks won't execute if Webots is paused or not running properly.</p>
+                    <p><b>4. Delay:</b> <i>delay</i> now uses seconds.</p>
+                    <p><b>5. Timing:</b> Delay keeps simulation time running while preserving control flow sequence.</p>
+                `,
+                'menuFileTitle': '📁 File ▾',
+                'menuSave': '💾 Save Project',
+                'menuFiles': '📂 Manage Files',
+                'menuEditTitle': '✏️ Edit ▾',
+                'menuClear': '🗑️ Clear Workspace',
+                'menuSettingsTitle': '⚙️ Settings ▾',
+                'menuLang': '🌐 Language (VIE)',
+                'menuThemeLight': '⚪ Light Mode',
+                'menuThemeDark': '⚫ Dark Mode',
+                'menuThemeKimbie': '🟤 Kimbie Dark',
+                'menuThemeMonokai': '🟢 Monokai',
+                'menuTogglePython': '🐍 Toggle Python',
+                'menuNotes': 'ℹ️ Notes',
+            },
+            'vi': {
+                'importBtn': 'NẠP CODE', 'saveBtn': 'LƯU', 'filesBtn': 'TỆP TIN', 'clearBtn': 'XÓA', 'helpBtn': 'GHI CHÚ',
+                'consoleTitle': '>_ BẢNG ĐIỀU KHIỂN PYTHON', 'consoleWait': 'Đang chờ nạp code...', 'modalTitle': 'Đã Lưu', 'emptyFiles': 'Trống',
+                'catVars': 'Biến số', 'catFuncs': 'Hàm', 'catMotors': 'Động cơ', 'catGripper': 'Tay gắp', 'catTime': 'Thời gian', 'catSensors': 'Cảm biến', 'catControl': 'Điều khiển', 'catLists': 'Danh sách', 'catMath': 'Hàm toán', 'catCamera': 'Máy quay', 'catOther': 'Khác',
+                'b_toList': 'vào danh sách', 'b_append': 'thêm', 'b_abs': 'trị tuyệt đối', 'b_mod': 'chia lấy dư', 'b_by': 'cho', 'b_round': 'làm tròn tới', 'b_decimals': 'số thập phân', 'b_createText': 'tạo văn bản từ', 'b_text': 'văn bản',
+                
+                'b_start': '🏁 Bắt đầu', 'b_end': '🛑 Kết thúc',
+                'b_goForward': '⬆️ đi tới', 'b_goBackward': '⬇️ đi lùi', 'b_turnLeft': '↪️ rẽ trái', 'b_turnRight': '↩️ rẽ phải', 'b_delay': '⏱️ dừng (giây)', 'b_getTime': '⏳ lấy thời gian', 'b_resetTime': '🔄 làm mới đồng hồ', 'b_print': '🖨️ in ra',
+                'b_getDistance': '📡 đọc cảm biến khoảng cách',
+                'b_grip': '🦾 gắp', 'b_release': '✋ thả', 'b_armUp': '⬆️ nâng tay', 'b_armDown': '⬇️ hạ tay',
+                'b_while': 'while',
+                'b_do': 'làm',
+                'b_stopAll': '🛑 dừng(tất cả)',
+                
+                'poweredBy': 'Được cung cấp bởi',
+                'noteTitle': '⚠️ LƯU Ý',
+                'noteLine1': 'Nếu lỡ tắt web, click chuột phải vào Node của Robot (Webots) -> Show Robot Window.',
+                'noteLine2': 'Đảm bảo rằng bạn đã bật Webots và môi trường mô phỏng.',
+
+                'menuThemeTitle': '🎨 Giao diện',
+
+                'aiBtnText': 'Trợ lý S4V',
+                'aiMenuGuide': 'Hướng dẫn sử dụng Blocks',
+                'aiMenuGemini': 'Gemini (Đang phát triển)',
+
+                'menuZoomIn': 'Phóng to (+)',
+                'menuZoomOut': 'Thu nhỏ (-)',
+                'menuCenter': 'Căn giữa vùng làm việc',
+
+                'copyBtn': '📋 Sao chép',
+                'lineCountStr': 'dòng',
+
+                'notesModalTitle': 'Quy Trình & Cài Đặt Chung',
+                'notesModalContent': `
+                    <p><b>1. Quy trình:</b> Lắp ráp khối lệnh &rarr; Bấm <b>NẠP CODE</b> (chạy ngay). Muốn dừng/tiếp dùng <b>Tạm dừng</b> và <b>Play</b>.</p>
+                    <p><b>2. Khôi phục:</b> Bấm nút Reset (⏮) để đưa robot về vạch xuất phát.</p>
+                    <p><b>3. Giao diện:</b> Nút 🎨 ở góc trên cùng bên phải dùng để đổi 4 phong cách VS Code.</p>
+                    <p><b>4. Ngôn ngữ:</b> Nút ENG/VIE dùng để chuyển đổi ngôn ngữ Anh/Việt.</p>
+                    <p><b>5. Lưu:</b> Nút LƯU để lưu các khối hiện tại vào bộ nhớ trình duyệt.</p>
+                    <p><b>6. Tệp tin:</b> Nút TỆP TIN để xem và quản lý các tệp tin đã lưu.</p>
+                    <hr>
+                    <p style="font-size:12px; color:#666;"><i>Lưu ý: Bảng điều khiển này giao tiếp với Webots qua Localhost.</i></p>
+                `,
+
+                'blockGuideTitle': 'Hướng Dẫn Dùng Khối Lệnh',
+                'blockGuideContent': `
+                    <p><b>1. Nếu web không nhận lệnh:</b> Đảm bảo Webots đang ở chế độ <b>"Play"</b> (▶) và chưa bị đóng băng.</p>
+                    <p><b>2. Động cơ:</b> Dùng trực tiếp các khối <i>đi tới / đi lùi / rẽ trái / rẽ phải</i> với tốc độ 0..100%.</p>
+                    <p><b>3. Tương thích cũ:</b> Các dự án dùng khối động cơ cũ được ánh xạ tương thích ở runtime, không cần sửa tay.</p>
+                    <p><b>4. Delay:</b> Khối dừng dùng đơn vị giây.</p>
+                    <p><b>5. Mô phỏng:</b> Delay chỉ tạm dừng luồng logic, thời gian vật lý vẫn chạy bình thường.</p>
+                `,
+                
+                'menuFileTitle': '📁 Tệp ▾',
+                'menuSave': '💾 Lưu dự án',
+                'menuFiles': '📂 Quản lý Tệp',
+                'menuEditTitle': '✏️ Chỉnh sửa ▾',
+                'menuClear': '🗑️ Xóa sa bàn',
+                'menuSettingsTitle': '⚙️ Cài đặt ▾',
+                'menuLang': '🌐 Ngôn ngữ (ENG)',
+                'menuThemeLight': '⚪ Nền sáng',
+                'menuThemeDark': '⚫ Nền tối',
+                'menuThemeKimbie': '🟤 Nâu đất',
+                'menuThemeMonokai': '🟢 Đen nhám',
+                'menuTogglePython': '🐍 Bật/Tắt Python',
+                'menuNotes': 'ℹ️ Ghi chú',
+            }
+        };
+        const dict = translations[currentLang];
+    </script>
+
+    <script src="google-blockly-31ee4ea/blockly_compressed.js"></script>
+    <script src="google-blockly-31ee4ea/blocks_compressed.js"></script>
+    <script src="google-blockly-31ee4ea/python_compressed.js"></script>
+    <script>document.write('<script src="google-blockly-31ee4ea/msg/js/' + currentLang + '.js"><\\/script>');</script>
+    <script src="google-blockly-31ee4ea/blocks/motors.js"></script>
+    <script src="google-blockly-31ee4ea/blocks/gripper.js"></script>
+    <script src="google-blockly-31ee4ea/blocks/time.js"></script>
+    <script src="google-blockly-31ee4ea/blocks/sensors.js"></script>
+    <script src="google-blockly-31ee4ea/blocks/camera.js"></script>
+    <script src="google-blockly-31ee4ea/blocks/other.js"></script> 
+    <script src="google-blockly-31ee4ea/generators/python/motors.js"></script>
+    <script src="google-blockly-31ee4ea/generators/python/gripper.js"></script>
+    <script src="google-blockly-31ee4ea/generators/python/time.js"></script>
+    <script src="google-blockly-31ee4ea/generators/python/sensors.js"></script>
+    <script src="google-blockly-31ee4ea/generators/python/camera.js"></script>
+    <script src="google-blockly-31ee4ea/generators/python/other.js"></script>
+
+    <script type="module">
+        import RobotWindow from 'https://cyberbotics.com/wwi/R2023b/RobotWindow.js'; 
+        window.robotWindowObj = new RobotWindow();
+        window.isSimPlaying = false; 
+        window.lastImportedCode = ""; 
+        
+        window.robotWindowObj.receive = function(message, robot) {
+            if (message.startsWith("TIME:")) {
+                document.getElementById("timerDisplay").innerText = parseFloat(message.split(":")[1]).toFixed(2) + "s";
+            } else if (message === "STATUS:READY") {
+                console.log("Webots Backend is ready to receive commands.");
+                // Backend mặc định realtime (giống sau CMD:RESET): đồng bộ UI với Pause ⏸
+                window.isSimPlaying = true;
+                updatePlayIcon(true);
+            }
+        };
+        window.sendToRobot = function(msg) { if(window.robotWindowObj) window.robotWindowObj.send(msg); };
+    </script>
+</head>
+
+<script>
+    if(currentThemeObj !== 'light') { document.write('<body data-theme="' + currentThemeObj + '">'); } else { document.write('<body>'); }
+</script>
+
+    <div id="headerBar">
+        <!-- DÒNG 1: KHU VỰC ĐIỀU KHIỂN CỐ ĐỊNH -->
+        <div class="header-row-1">
+            <div id="projectTitleContainer">
+                <div id="projectName" contenteditable="false">MyProject</div>
+                <button id="btnEditName" onclick="window.enableNameEdit()" title="Edit Name">✏️</button>
+            </div>
+
+            <!-- CHỨC NĂNG ĐỒNG HỒ KHÔNG THAY ĐỔI -->
+            <div id="simDashboard">
+                <button id="btnSimReset" class="sim-btn" onclick="simControl('RESET')" title="Reset"> &#9194; </button>
+                <button id="btnSimPlay" class="sim-btn" onclick="simControl('TOGGLE')" title="Play/Pause"> &#9654; </button>
+                <span id="timerDisplay">0.00s</span>
+            </div>
+            
+            <!-- SỬA LẠI THẺ NÚT NẠP CODE ĐỂ KHÔI PHỤC FONT VÀ ĐỘ RỘNG -->
+            <button id="btnImport" data-i18n="importBtn" onclick="userClickedImport()">NẠP CODE</button>
+        </div>
+
+        <!-- DÒNG 2: KHU VỰC MENU TRƯỢT NGANG -->
+        <div class="header-row-2">
+            <div class="nav-menu-container">
+                <button class="nav-menu-btn" data-i18n="menuFileTitle" onclick="toggleNavMenu('menuFile', event)">📁 File ▾</button>
+                <div id="menuFile" class="nav-dropdown">
+                    <div class="nav-item" data-i18n="menuSave" onclick="userClickedSave()">💾 Lưu dự án</div>
+                    <div class="nav-item has-submenu" onmouseenter="userClickedFiles()">
+                        <span data-i18n="menuFiles">📂 Quản lý Tệp</span>
+                        <div class="nav-submenu" id="fileSubmenuContainer"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-menu-container">
+                <button class="nav-menu-btn" data-i18n="menuEditTitle" onclick="toggleNavMenu('menuEdit', event)">✏️ Edit ▾</button>
+                <div id="menuEdit" class="nav-dropdown">
+                    <div class="nav-item" data-i18n="menuClear" onclick="workspace.clear()" style="color: #d32f2f;">🗑️ Xóa sa bàn</div>
+                </div>
+            </div>
+
+            <div class="nav-menu-container">
+                <button class="nav-menu-btn" data-i18n="menuSettingsTitle" onclick="toggleNavMenu('menuSettings', event)">⚙️ Settings ▾</button>
+                <div id="menuSettings" class="nav-dropdown">
+                    <div class="nav-item" data-i18n="menuLang" onclick="toggleLanguage()">🌐 Ngôn ngữ</div>
+                    <div class="nav-item has-submenu">
+                        <span data-i18n="menuThemeTitle">🎨 Giao diện</span>
+                        <div class="nav-submenu">
+                            <div class="nav-item" data-i18n="menuThemeLight" onclick="applyTheme('light')">⚪ Light Mode</div>
+                            <div class="nav-item" data-i18n="menuThemeDark" onclick="applyTheme('dark')">⚫ Dark Mode</div>
+                            <div class="nav-item" data-i18n="menuThemeKimbie" onclick="applyTheme('kimbie')">🟤 Kimbie Dark</div>
+                            <div class="nav-item" data-i18n="menuThemeMonokai" onclick="applyTheme('monokai')">🟢 Monokai</div>
+                        </div>
+                    </div>
+                    <div class="nav-item" data-i18n="menuTogglePython" onclick="toggleCodePanel()" style="border-top: 1px solid var(--border-color);">🐍 Bật/Tắt Python</div>
+                    <div class="nav-item has-submenu">
+                        <span data-i18n="menuNotes">ℹ️ Ghi chú</span>
+                        <div class="nav-submenu" style="width: 350px; padding: 15px; white-space: normal;">
+                            <div data-i18n="notesModalContent" style="line-height: 1.6; font-size: 13px; font-weight: normal; color: var(--text-header);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainLayout">
+        <div id="blocklyContainer">
+            <div id="blocklyDiv"></div>
+            
+            <!-- CHỮ KÝ SIGNATURE TRÊN ĐỈNH TOOLBOX -->
+            <div id="signatureHeader">
+                <img src="ayor.png" alt="Ayor Logo" class="signature-logo">
+                <img src="logo_steam.png" alt="STEAM Logo" class="signature-logo">
+            </div>
+
+        </div>
+        
+        <div id="codeContainer">
+            <div class="console-header" data-i18n="consoleTitle">>_ PYTHON OUTPUT / LOGS</div>
+            <div id="codeOutput" data-i18n="consoleWait"> Waiting for code...</div>
+            <div class="console-footer">
+                <div class="console-footer-left">
+                    <span id="lineCountLabel">0 <span data-i18n="lineCountStr">lines</span></span>
+                    <span>UTF-8</span>
+                    <span>Python 3</span>
+                </div>
+                <div class="console-footer-right">
+                    <button id="btnCopyCode" onclick="copyConsoleCode()" data-i18n="copyBtn">📋 Copy All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.write(`
+        <xml id="toolbox" style="display: none">
+            <category name="${dict.catVars}" colour="%{BKY_VARIABLES_HUE}" custom="VARIABLE"></category>
+            <category name="${dict.catFuncs}" colour="%{BKY_PROCEDURES_HUE}" custom="PROCEDURE"></category>
+            <category name="${dict.catMotors}" colour=120>
+              <block type="motors_go_forward">
+                <value name="speed">
+                  <shadow type="math_number"><field name="NUM">50</field></shadow>
+                </value>
+              </block>
+              <block type="motors_go_backward">
+                <value name="speed">
+                  <shadow type="math_number"><field name="NUM">50</field></shadow>
+                </value>
+              </block>
+              <block type="motors_turn_left">
+                <value name="speed">
+                  <shadow type="math_number"><field name="NUM">50</field></shadow>
+                </value>
+              </block>
+              <block type="motors_turn_right">
+                <value name="speed">
+                  <shadow type="math_number"><field name="NUM">50</field></shadow>
+                </value>
+              </block>
+            </category>
+            <category name="${dict.catGripper}" colour=290>
+              <block type="gripper_grip">
+                <value name="angle">
+                  <shadow type="math_number"><field name="NUM">30</field></shadow>
+                </value>
+              </block>
+              <block type="gripper_release">
+                <value name="angle">
+                  <shadow type="math_number"><field name="NUM">-10</field></shadow>
+                </value>
+              </block>
+              <block type="arm_up">
+                <value name="angle">
+                  <shadow type="math_number"><field name="NUM">0</field></shadow>
+                </value>
+              </block>
+              <block type="arm_down">
+                <value name="angle">
+                  <shadow type="math_number"><field name="NUM">45</field></shadow>
+                </value>
+              </block>
+            </category>
+            <category name="${dict.catTime}" colour=45>
+              <block type="time_delay">
+                <value name="ms">
+                  <shadow type="math_number"><field name="NUM">1</field></shadow>
+                </value>
+              </block>
+              <block type="time_gettime"></block>
+            </category>
+            <category name="${dict.catSensors}" colour=60>
+              <block type="sensors_getdistance"></block>
+            </category>
+            <category name="${dict.catControl}" colour=240>
+              <block type="logic_boolean"></block>
+              <block type="controls_if"></block>
+              <block type="controls_repeat_ext"></block>
+              <block type="control_while"></block>
+              <block type="control_stop_all"></block>
+              <block type="logic_compare"></block>
+              <block type="logic_operation"></block>
+            </category>
+            <category name="${dict.catLists}" colour=210>
+              <block type="lists_create_with"><mutation items="0"></mutation></block>
+              <block type="lists_create_with"></block>
+              <block type="lists_length"></block>
+              <block type="lists_getIndex"><value name="VALUE"><block type="variables_get"><field name="VAR">{listVariable}</field></block></value></block>
+              <block type="lists_setIndex"><value name="LIST"><block type="variables_get"><field name="VAR">{listVariable}</field></block></value></block>
+              <block type="lists_append"><value name="LIST"><block type="variables_get"><field name="VAR">{listVariable}</field></block></value></block>
+            </category>
+            <category name="${dict.catMath}" colour=180>
+              <block type="math_number"></block>
+              <block type="math_arithmetic"></block>
+              <block type="math_abs"></block>
+              <block type="math_mod"></block>
+              <block type="math_round2"></block>
+            </category>
+            <category name="${dict.catOther}" colour=0>
+                <block type="text_print"></block>
+                <block type="text"></block>
+                <block type="concattext"></block>
+            </category>
+        </xml>
+        `);
+    </script>
+
+    <script>
+        document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = dict[el.getAttribute('data-i18n')]; });
+
+        function toggleLanguage() {
+            localStorage.setItem('blockly_lang', currentLang === 'en' ? 'vi' : 'en');
+            if (workspace) localStorage.setItem(BACKUP_KEY, Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace)));
+            location.reload(); 
+        }
+
+        const KimbieTheme = Blockly.Theme.defineTheme('kimbie', {
+            'base': Blockly.Themes.Dark,
+            'componentStyles': {
+                'workspaceBackgroundColour': '#221a0f',
+                'toolboxBackgroundColour': '#362712',
+                'toolboxForegroundColour': '#d3af86',
+                'flyoutBackgroundColour': '#251b0f',
+                'flyoutForegroundColour': '#d3af86',
+                'scrollbarColour': '#795b36',
+                'scrollbarOpacity': 0.4
+            }
+        });
+
+        const MonokaiTheme = Blockly.Theme.defineTheme('monokai', {
+            'base': Blockly.Themes.Dark,
+            'componentStyles': {
+                'workspaceBackgroundColour': '#272822',
+                'toolboxBackgroundColour': '#1e1f1c',
+                'toolboxForegroundColour': '#f8f8f2',
+                'flyoutBackgroundColour': '#272822',
+                'flyoutForegroundColour': '#f8f8f2',
+                'scrollbarColour': '#75715e',
+                'scrollbarOpacity': 0.4
+            }
+        });
+
+        function toggleThemeDropdown() { document.getElementById('themeDropdown').classList.toggle('show'); }
+
+        function applyTheme(themeName) {
+            currentThemeObj = themeName;
+            localStorage.setItem('blockly_theme', themeName);
+            
+            if (themeName === 'light') {
+                document.body.removeAttribute('data-theme');
+                if (workspace) workspace.setTheme(Blockly.Themes.Classic);
+            } else {
+                document.body.setAttribute('data-theme', themeName);
+                if (workspace) {
+                    if (themeName === 'dark') workspace.setTheme(Blockly.Themes.Dark);
+                    else if (themeName === 'kimbie') workspace.setTheme(KimbieTheme);
+                    else if (themeName === 'monokai') workspace.setTheme(MonokaiTheme);
+                }
+            }
+            overrideColors();
+        }
+
+        window.enableNameEdit = function() {
+            var nameEl = document.getElementById("projectName");
+            nameEl.contentEditable = "true";
+            nameEl.focus();
+            var range = document.createRange();
+            range.selectNodeContents(nameEl);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        };
+
+        document.getElementById("projectName").addEventListener("blur", function() { this.contentEditable = "false"; });
+        document.getElementById("projectName").addEventListener("keydown", function(e) { if (e.key === 'Enter') { e.preventDefault(); this.blur(); } });
+
+        // Logic bật/tắt các Menu Dropdown với Động cơ Hình học
+        window.toggleNavMenu = function(menuId, event) {
+            event.stopPropagation(); 
+            var targetMenu = document.getElementById(menuId);
+            var btn = event.currentTarget; // Bắt lấy cái nút vừa được bấm
+            var isShowing = targetMenu.classList.contains('show');
+            
+            
+            // Đóng tất cả dropdown đang mở
+            document.querySelectorAll('.nav-dropdown').forEach(function(m) { m.classList.remove('show'); });
+            
+            // Nếu menu đang đóng, thì mở nó lên và tính tọa độ bắn
+            if (!isShowing) { 
+                targetMenu.classList.add('show'); 
+                
+                // ĐỘNG CƠ HÌNH HỌC: Quét tọa độ của nút trên màn hình
+                var rect = btn.getBoundingClientRect();
+                
+                // Ghim Menu ngay dưới đáy nút (cộng thêm 5px làm khe hở)
+                targetMenu.style.top = (rect.bottom + 5) + 'px';
+                
+                // Căn lề phải của Menu sao cho bằng mép phải của nút
+                targetMenu.style.right = (window.innerWidth - rect.right) + 'px';
+                targetMenu.style.left = 'auto'; // Hủy lề trái
+            }
+        };
+
+        var row2 = document.querySelector('.header-row-2');
+        if (row2) {
+            row2.addEventListener('scroll', function() {
+                // Nếu lăn thanh cuộn, lập tức giấu tất cả các menu đang mở đi
+                document.querySelectorAll('.nav-dropdown').forEach(function(m) { m.classList.remove('show'); });
+            });
+        }
+
+        // HỆ THỐNG PHÒNG NGỰ: Nếu người dùng đang mở Menu mà lại lăn thanh cuộn Header, tự động tắt Menu
+        document.getElementById('headerBar').addEventListener('scroll', function() {
+            document.querySelectorAll('.nav-dropdown').forEach(function(m) { m.classList.remove('show'); });
+        });
+        function escapeHtml(unsafe) {
+            if (!unsafe) return "";
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        window.copyConsoleCode = function() {
+            if (!window.currentDisplayCode) return;
+            navigator.clipboard.writeText(window.currentDisplayCode).then(() => {
+                var btn = document.getElementById('btnCopyCode');
+                var oldText = btn.innerText;
+                btn.innerText = "✔ OK";
+                btn.style.color = "#51cf66";
+                setTimeout(() => { 
+                    btn.innerText = oldText; 
+                    btn.style.color = "";
+                }, 1500);
+            }).catch(err => {
+                alert("Lỗi Copy: " + err);
+            });
+        };
+
+        function enforceRobotWindowFrameLayout() {
+            return; // Đã cắt bỏ khối u bóp méo 33% màn hình
+        }
+
+        Blockly.Python['other_start'] = function(block) {
+            return '# --- BẮT ĐẦU LOGIC TỪ WEBAPP ---\n';
+        };
+
+        Blockly.Python['other_end'] = function(block) { return ''; };
+
+        function resolveSpeedValue(block, inputName, defaultVal) {
+            var value = Blockly.Python.valueToCode(block, inputName, Blockly.Python.ORDER_ATOMIC);
+            return value || String(defaultVal);
+        }
+
+        function ensureMotionBlocksDefined() {
+            var missing = [];
+            if (!Blockly.Blocks['motors_go_forward']) missing.push('motors_go_forward');
+            if (!Blockly.Blocks['motors_go_backward']) missing.push('motors_go_backward');
+            if (!Blockly.Blocks['motors_turn_left']) missing.push('motors_turn_left');
+            if (!Blockly.Blocks['motors_turn_right']) missing.push('motors_turn_right');
+            if (!Blockly.Blocks['time_delay']) missing.push('time_delay');
+
+            if (!missing.length) return;
+
+            var defs = [];
+            if (missing.indexOf('motors_go_forward') !== -1) {
+                defs.push({
+                    "type": "motors_go_forward",
+                    "message0": "goForward %1 %%",
+                    "args0": [{"type": "input_value", "name": "speed", "check": "Number"}],
+                    "previousStatement": null,
+                    "nextStatement": null,
+                    "colour": 120,
+                    "tooltip": "Move robot forward",
+                    "helpUrl": ""
+                });
+            }
+            if (missing.indexOf('motors_go_backward') !== -1) {
+                defs.push({
+                    "type": "motors_go_backward",
+                    "message0": "goBackward %1 %%",
+                    "args0": [{"type": "input_value", "name": "speed", "check": "Number"}],
+                    "previousStatement": null,
+                    "nextStatement": null,
+                    "colour": 120,
+                    "tooltip": "Move robot backward",
+                    "helpUrl": ""
+                });
+            }
+            if (missing.indexOf('motors_turn_left') !== -1) {
+                defs.push({
+                    "type": "motors_turn_left",
+                    "message0": "turnLeft %1 %%",
+                    "args0": [{"type": "input_value", "name": "speed", "check": "Number"}],
+                    "previousStatement": null,
+                    "nextStatement": null,
+                    "colour": 120,
+                    "tooltip": "Turn left",
+                    "helpUrl": ""
+                });
+            }
+            if (missing.indexOf('motors_turn_right') !== -1) {
+                defs.push({
+                    "type": "motors_turn_right",
+                    "message0": "turnRight %1 %%",
+                    "args0": [{"type": "input_value", "name": "speed", "check": "Number"}],
+                    "previousStatement": null,
+                    "nextStatement": null,
+                    "colour": 120,
+                    "tooltip": "Turn right",
+                    "helpUrl": ""
+                });
+            }
+            if (missing.indexOf('time_delay') !== -1) {
+                defs.push({
+                    "type": "time_delay",
+                    "message0": "delay %1 s",
+                    "args0": [{"type": "input_value", "name": "ms", "check": "Number"}],
+                    "previousStatement": null,
+                    "nextStatement": null,
+                    "colour": 80,
+                    "tooltip": "Delay in seconds",
+                    "helpUrl": ""
+                });
+            }
+
+            if (defs.length) {
+                Blockly.defineBlocksWithJsonArray(defs);
+                console.warn('[test33] Recovered missing Blockly blocks:', missing.join(', '));
+            }
+        }
+
+        function installMotionApiGenerators() {
+            Blockly.Python['motors_go_forward'] = function(block) {
+                var speed = resolveSpeedValue(block, 'speed', 50);
+                return 'robot.go_forward(' + speed + ')\n';
+            };
+            Blockly.Python['motors_go_backward'] = function(block) {
+                var speed = resolveSpeedValue(block, 'speed', 50);
+                return 'robot.go_backward(' + speed + ')\n';
+            };
+            Blockly.Python['motors_turn_left'] = function(block) {
+                var speed = resolveSpeedValue(block, 'speed', 50);
+                return 'robot.turn_left(' + speed + ')\n';
+            };
+            Blockly.Python['motors_turn_right'] = function(block) {
+                var speed = resolveSpeedValue(block, 'speed', 50);
+                return 'robot.turn_right(' + speed + ')\n';
+            };
+            Blockly.Python['time_delay'] = function(block) {
+                var value_sec = resolveSpeedValue(block, 'ms', 1);
+                return 'delay(' + value_sec + ')\n';
+            };
+        }
+
+        // Cố định mapping generator sau khi nạp python_compressed.js để tránh bị ghi đè bởi legacy mapping.
+        installMotionApiGenerators();
+
+        // Legacy compatibility blocks -> map to runtime compatibility layer (không dùng setVelocity trong code sinh)
+        Blockly.Python['motors_setupmotor'] = function(block) {
+            var varName = Blockly.Python.variableDB_.getName(block.getFieldValue('motorObj'), Blockly.Variables.NAME_TYPE);
+            var portName = block.getFieldValue('motorName') || '';
+            return '__legacy_bind_motor("' + varName + '", "' + portName.replace(/"/g, '\\"') + '")\n';
+        };
+        Blockly.Python['motors_setspeed'] = function(block) {
+            var varName = Blockly.Python.variableDB_.getName(block.getFieldValue('motorObj'), Blockly.Variables.NAME_TYPE);
+            var speedVal = Blockly.Python.valueToCode(block, 'motorSpeed', Blockly.Python.ORDER_ATOMIC) || '0';
+            return '__legacy_set_motor_speed("' + varName + '", ' + speedVal + ')\n';
+        };
+
+        // SINH MÃ PYTHON CHO CẢM BIẾN
+        Blockly.Python['sensors_getdistance'] = function(block) { 
+            // Trả về lệnh gọi hàm getDistance(), kèm mức độ ưu tiên
+            return ['getDistance()', Blockly.Python.ORDER_FUNCTION_CALL]; 
+        };
+
+        function translateWebotsBlocks() {
+            const replaceLabel = function(blockType, originalEnglish, translatedWord) {
+                if(Blockly.Blocks[blockType]) {
+                    var oldInit = Blockly.Blocks[blockType].init;
+                    Blockly.Blocks[blockType].init = function() {
+                        oldInit.call(this); 
+                        for(var i = 0; i < this.inputList.length; i++) {
+                            for(var j = 0; j < this.inputList[i].fieldRow.length; j++) {
+                                var field = this.inputList[i].fieldRow[j];
+                                if (field.getText && field.setValue) { if (field.getText().trim() === originalEnglish) { field.setValue(translatedWord); } }
+                            }
+                        }
+                    };
+                }
+            };
+            replaceLabel('other_start', 'Start', dict.b_start); replaceLabel('other_end', 'End', dict.b_end);
+            replaceLabel('motors_go_forward', 'goForward', dict.b_goForward); replaceLabel('motors_go_backward', 'goBackward', dict.b_goBackward);
+            replaceLabel('motors_turn_left', 'turnLeft', dict.b_turnLeft); replaceLabel('motors_turn_right', 'turnRight', dict.b_turnRight);
+            replaceLabel('motors_setupmotor', 'setupMotor', '⚙️ setupMotor (legacy)'); replaceLabel('motors_setspeed', 'setSpeed', '🚀 setSpeed (legacy)');
+            replaceLabel('time_delay', 'delay', dict.b_delay); replaceLabel('time_gettime', 'getTime', dict.b_getTime);
+            replaceLabel('text_print', 'print', dict.b_print);
+        }
+
+        Blockly.Blocks['lists_append'] = { init: function() { this.appendValueInput("LIST").setCheck("Array").appendField(dict.b_toList); this.appendValueInput("ITEM").appendField(dict.b_append); this.setPreviousStatement(true, null); this.setNextStatement(true, null); this.setColour(210); } }; Blockly.Python['lists_append'] = function(block) { var list = Blockly.Python.valueToCode(block, 'LIST', Blockly.Python.ORDER_ATOMIC) || '[]'; var item = Blockly.Python.valueToCode(block, 'ITEM', Blockly.Python.ORDER_ATOMIC) || 'None'; return list + '.append(' + item + ')\n'; };
+        Blockly.Blocks['control_while'] = {
+            init: function() {
+                this.appendValueInput("COND").setCheck("Boolean").appendField(dict.b_while);
+                this.appendStatementInput("DO").appendField(dict.b_do);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(240);
+            }
+        };
+        Blockly.Python['control_while'] = function(block) {
+            var condition = Blockly.Python.valueToCode(block, 'COND', Blockly.Python.ORDER_NONE) || 'True';
+            var branch = Blockly.Python.statementToCode(block, 'DO');
+            if (!branch.trim()) branch = '  pass\n';
+            return 'while ' + condition + ':\n' + '  while_tick()\n' + branch;
+        };
+        Blockly.Blocks['control_stop_all'] = {
+            init: function() {
+                this.appendDummyInput().appendField(dict.b_stopAll);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(240);
+            }
+        };
+        Blockly.Python['control_stop_all'] = function(block) {
+            return 'stop_all()\n';
+        };
+
+        function toDisplayCode(runtimeCode) {
+            if (!runtimeCode) return "";
+            return runtimeCode
+                .split('\n')
+                .filter(function(line) { return line.trim() !== 'while_tick()'; })
+                .join('\n');
+        }
+        // ĐỊNH NGHĨA KHỐI CẢM BIẾN KHOẢNG CÁCH (Màu 60 theo nhóm Sensors)
+        Blockly.Blocks['sensors_getdistance'] = { 
+            init: function() { 
+                this.appendDummyInput().appendField(dict.b_getDistance); 
+                this.setOutput(true, "Number"); // Hình thoi, trả về số
+                this.setColour(60); 
+            } 
+        };
+        Blockly.Blocks['math_abs'] = { init: function() { this.appendValueInput("NUM").setCheck("Number").appendField(dict.b_abs); this.setOutput(true, "Number"); this.setColour(180); } }; Blockly.Python['math_abs'] = function(block) { var num = Blockly.Python.valueToCode(block, 'NUM', Blockly.Python.ORDER_ATOMIC) || '0'; return ['math.fabs(' + num + ')', Blockly.Python.ORDER_FUNCTION_CALL]; };
+        Blockly.Blocks['math_mod'] = { init: function() { this.appendValueInput("A").setCheck("Number").appendField(dict.b_mod); this.appendValueInput("B").setCheck("Number").appendField(dict.b_by); this.setInputsInline(true); this.setOutput(true, "Number"); this.setColour(180); } }; Blockly.Python['math_mod'] = function(block) { var a = Blockly.Python.valueToCode(block, 'A', Blockly.Python.ORDER_ATOMIC) || '0'; var b = Blockly.Python.valueToCode(block, 'B', Blockly.Python.ORDER_ATOMIC) || '1'; return [a + ' % ' + b, Blockly.Python.ORDER_MULTIPLICATIVE]; };
+        Blockly.Blocks['math_round2'] = { init: function() { this.appendValueInput("NUM").setCheck("Number").appendField(dict.b_round); this.appendValueInput("DEC").setCheck("Number").appendField(dict.b_decimals); this.setOutput(true, "Number"); this.setColour(180); this.setInputsInline(true); } }; Blockly.Python['math_round2'] = function(block) { var num = Blockly.Python.valueToCode(block, 'NUM', Blockly.Python.ORDER_ATOMIC) || '0'; var dec = block.getFieldValue('DEC') || '2'; return ['round(' + num + ', ' + dec + ')', Blockly.Python.ORDER_FUNCTION_CALL]; };
+        var concatDef = { init: function() { this.appendValueInput("A").appendField(this.type == 'concattext' ? dict.b_createText : dict.b_text); this.appendValueInput("B").appendField("+"); this.setOutput(true, "String"); this.setColour(0); } }; Blockly.Blocks['concattext'] = concatDef; Blockly.Blocks['concattext2'] = concatDef; Blockly.Python['concattext'] = function(block) { var a = Blockly.Python.valueToCode(block, 'A', Blockly.Python.ORDER_ATOMIC) || "''"; var b = Blockly.Python.valueToCode(block, 'B', Blockly.Python.ORDER_ATOMIC) || "''"; return ["str(" + a + ") + str(" + b + ")", Blockly.Python.ORDER_ADDITIVE]; }; Blockly.Python['concattext2'] = Blockly.Python['concattext'];
+
+        function overrideColors() {
+            var mathBlocks = ['math_number', 'math_arithmetic', 'math_single', 'math_trig', 'math_constant', 'math_number_property', 'math_round', 'math_on_list', 'math_modulo', 'math_constrain', 'math_random_int', 'math_random_float'];
+            var loopBlocks = ['controls_repeat_ext', 'controls_whileUntil', 'control_while', 'controls_for', 'controls_forEach', 'controls_flow_statements'];
+            var logicBlocks = ['controls_if', 'logic_compare', 'logic_operation', 'logic_negate', 'logic_boolean', 'logic_null', 'logic_ternary'];
+            var listBlocks = ['lists_create_empty', 'lists_create_with', 'lists_repeat', 'lists_length', 'lists_isEmpty', 'lists_indexOf', 'lists_getIndex', 'lists_setIndex'];
+            var paint = function(blockList, hue) { blockList.forEach(function(b) { if(Blockly.Blocks[b]) { var oldInit = Blockly.Blocks[b].init; Blockly.Blocks[b].init = function() { oldInit.call(this); this.setColour(hue); }; } }); };
+            paint(mathBlocks, 180); paint(loopBlocks, 240); paint(logicBlocks, 240); paint(listBlocks, 210);
+            paint(['control_stop_all'], 240);
+            paint(['other_start', 'other_end', 'text_print', 'text', 'text_join', 'text_append', 'text_length', 'text_isEmpty', 'text_indexOf', 'text_charAt', 'text_getSubstring', 'text_changeCase', 'text_trim', 'text_prompt_ext', 'concattext', 'concattext2'], 0); 
+            paint(['motors_go_forward', 'motors_go_backward', 'motors_turn_left', 'motors_turn_right', 'motors_setupmotor', 'motors_setspeed'], 120); paint(['time_delay', 'time_gettime', 'time_resettime'], 45);
+        }
+
+        function registerCustomContextMenu(workspace) {
+            if (Blockly.ContextMenuRegistry) {
+                var zoomIn = { displayText: function() { return dict.menuZoomIn; }, preconditionFn: function() { return 'enabled'; }, callback: function(scope) { scope.workspace.zoomCenter(1); }, scopeType: Blockly.ContextMenuRegistry.ScopeType.WORKSPACE, id: 'custom_zoom_in', weight: 100 };
+                var zoomOut = { displayText: function() { return dict.menuZoomOut; }, preconditionFn: function() { return 'enabled'; }, callback: function(scope) { scope.workspace.zoomCenter(-1); }, scopeType: Blockly.ContextMenuRegistry.ScopeType.WORKSPACE, id: 'custom_zoom_out', weight: 101 };
+                var centerView = { displayText: function() { return dict.menuCenter; }, preconditionFn: function() { return 'enabled'; }, callback: function(scope) { scope.workspace.setScale(scope.workspace.options.zoomOptions.startScale || 1); scope.workspace.scrollCenter(); }, scopeType: Blockly.ContextMenuRegistry.ScopeType.WORKSPACE, id: 'custom_center_view', weight: 102 };
+                try { Blockly.ContextMenuRegistry.registry.register(zoomIn); Blockly.ContextMenuRegistry.registry.register(zoomOut); Blockly.ContextMenuRegistry.registry.register(centerView); } catch(e) {}
+            } else {
+                var orig = workspace.configureContextMenu;
+                workspace.configureContextMenu = function(menuOptions, e) {
+                    if (orig) orig.call(workspace, menuOptions, e);
+                    menuOptions.push({text: dict.menuZoomIn, enabled: true, callback: function() { workspace.zoomCenter(1); }});
+                    menuOptions.push({text: dict.menuZoomOut, enabled: true, callback: function() { workspace.zoomCenter(-1); }});
+                    menuOptions.push({text: dict.menuCenter, enabled: true, callback: function() { workspace.setScale(1); workspace.scrollCenter(); }});
+                };
+            }
+        }
+
+        var workspace = null;
+        // BẮT CÓC TÊN ROBOT TỪ URL (Lõi Đa Tác Tử)
+        const urlParams = new URLSearchParams(window.location.search);
+        const robotInstanceName = urlParams.get('name') || 'default'; 
+        
+        // CÔ LẬP KHÔNG GIAN LƯU TRỮ
+        const STORAGE_PREFIX = "webots_project_" + robotInstanceName + "_";
+        const BACKUP_KEY = 'temp_workspace_backup_' + robotInstanceName;
+
+        window.onload = function() {
+            enforceRobotWindowFrameLayout();
+            ensureMotionBlocksDefined();
+            translateWebotsBlocks();
+            overrideColors();
+            installMotionApiGenerators();
+            
+            var initTheme = Blockly.Themes.Classic;
+            if (currentThemeObj === 'dark') initTheme = Blockly.Themes.Dark;
+            else if (currentThemeObj === 'kimbie') initTheme = KimbieTheme;
+            else if (currentThemeObj === 'monokai') initTheme = MonokaiTheme;
+            // SỬA: Đặt mặc định là đóng ('1') nếu chưa từng được lưu trong máy
+            var storedState = localStorage.getItem('python_panel_hidden');
+            if (storedState === null) { storedState = '1'; } // Khởi tạo mặc định = ĐÓNG
+            
+            if (storedState === '1') {
+                document.getElementById('mainLayout').classList.add('code-hidden');
+                
+                // Tiêm lại cú lừa thế kỷ lúc khởi động trang để chống lỗi đen màn hình
+                setTimeout(function() {
+                    window.dispatchEvent(new Event('resize'));
+                }, 50);
+            }
+
+            // ĐỘNG CƠ CẢM BIẾN MÀN HÌNH: Nếu màn hình hẹp (dưới 1366px), tự động phóng to lưới lên 1.25x
+            var screenScale = window.innerWidth <= 1366 ? 1.25 : 1.0;
+
+            workspace = Blockly.inject('blocklyDiv', { 
+                media: 'https://unpkg.com/blockly/media/', 
+                toolbox: document.getElementById('toolbox'), 
+                // Tiêm tỷ lệ động screenScale vào startScale
+                zoom: {controls: false, wheel: true, startScale: screenScale, maxScale: 3, minScale: 0.3, scaleSpeed: 1.2}, 
+                trashcan: false, 
+                grid: {spacing: 20, length: 3, colour: '#ccc', snap: true}, 
+                theme: initTheme 
+            });
+            window.addEventListener('resize', refreshBlocklyLayout, false);
+            Blockly.svgResize(workspace);
+            
+            registerCustomContextMenu(workspace);
+            
+            workspace.addChangeListener(function(event) { 
+                try { 
+                    var code = Blockly.Python.workspaceToCode(workspace); 
+                    window.currentGeneratedCode = code;
+                    window.currentDisplayCode = toDisplayCode(code);
+                    
+                    var lines = window.currentDisplayCode.split('\n');
+                    if (lines[lines.length - 1] === "") lines.pop(); 
+                    
+                    document.getElementById('lineCountLabel').innerHTML = lines.length + ' <span data-i18n="lineCountStr">' + dict.lineCountStr + '</span>';
+
+                    var formattedCode = lines.map(function(line) {
+                        return '<div class="code-line">' + (escapeHtml(line) || ' ') + '</div>';
+                    }).join('');
+
+                    document.getElementById('codeOutput').style.color = "var(--console-text)";
+                    document.getElementById('codeOutput').innerHTML = formattedCode; 
+                } catch (e) {
+                    console.error("BLOCKLY GENERATOR ERROR:", e);
+                    document.getElementById('codeOutput').style.color = "#ff4c4c";
+                    document.getElementById('codeOutput').innerText = "❌ LỖI DỊCH MÃ:\n" + e.message;
+                } 
+            });
+
+            // SỬA ĐOẠN KHÔI PHỤC DỰ ÁN NÀY:
+            var backup = localStorage.getItem(BACKUP_KEY);
+            if (backup) {
+                var xml = Blockly.Xml.textToDom(backup);
+                Blockly.Xml.domToWorkspace(xml, workspace);
+                localStorage.removeItem(BACKUP_KEY); 
+            } else if(localStorage.getItem(STORAGE_PREFIX + "MyProject")) {
+                loadProject("MyProject");
+            }
+
+            // Thêm dòng này để tự động đổi tên hiển thị góc trái trên UI:
+            document.getElementById("projectName").innerText = "Code_" + robotInstanceName;
+
+            var codeHidden = localStorage.getItem('python_panel_hidden') === '1';
+            if (codeHidden) {
+                document.getElementById('mainLayout').classList.add('code-hidden');
+                document.getElementById('btnToggleCode').style.opacity = '0.65';
+                refreshBlocklyLayout();
+            }
+        };
+
+        window.addEventListener('resize', enforceRobotWindowFrameLayout);
+        setInterval(enforceRobotWindowFrameLayout, 1500);
+
+        function refreshBlocklyLayout() {
+            if (!workspace) return;
+            // Trả lại sự trong sáng cho hàm này, chỉ gọi đúng API lõi của thư viện
+            Blockly.svgResize(workspace);
+        }
+
+        function toggleCodePanel() {
+            var mainLayout = document.getElementById('mainLayout');
+            
+            mainLayout.classList.toggle('code-hidden');
+            var isHidden = mainLayout.classList.contains('code-hidden');
+            
+            localStorage.setItem('python_panel_hidden', isHidden ? '1' : '0');
+            
+            // TUYỆT CHIÊU CUỐI CÙNG: Giả mạo sự kiện người dùng kéo/thu nhỏ tab
+            setTimeout(function() {
+                // Ném một tín hiệu 'resize' giả vào hệ thống sau 50 mili-giây
+                // Đủ thời gian để Flexbox giãn ra 100% diện tích
+                window.dispatchEvent(new Event('resize'));
+            }, 50); 
+        }
+        window.toggleCodePanel = toggleCodePanel;
+
+        function updatePlayIcon(playing) {
+            window.isSimPlaying = playing;
+            var btn = document.getElementById("btnSimPlay");
+            if (playing) { btn.innerHTML = "&#10074;&#10074;"; btn.title = "Pause"; btn.style.color = "#51cf66"; } 
+            else { btn.innerHTML = "&#9654;"; btn.title = "Play"; btn.style.color = "#ccc"; }
+        }
+
+        window.simControl = function(action) {
+            if (!window.sendToRobot) return alert("Chưa kết nối Webots!");
+            if (action === 'TOGGLE') {
+                if (window.isSimPlaying) { window.sendToRobot("CMD:PAUSE"); updatePlayIcon(false); } 
+                else { window.sendToRobot("CMD:PLAY"); updatePlayIcon(true); }
+            } else if (action === 'RESET') { 
+                window.sendToRobot("CMD:RESET"); 
+                document.getElementById("timerDisplay").innerText = "0.00s"; 
+                // Ép giao diện chuyển sang trạng thái "Đang chạy" (Nút Pause) ngay lập tức
+                updatePlayIcon(true); 
+            }
+            else if (action === 'PLAY_FORCE') { window.sendToRobot("CMD:PLAY"); updatePlayIcon(true); }
+        };
+
+/* =========================================
+           HỆ THỐNG QUẢN LÝ TỆP NÂNG CAO (ĐÃ VÁ LỖI HOÀN TOÀN)
+           ========================================= */
+        const STAR_STORAGE_KEY = "webots_starred_files_" + robotInstanceName;
+
+        // 1. TỆP TEST: Chuẩn hóa lại toàn bộ cấu trúc XML tương thích 100% với Blockly Parser
+        // XML CỨNG CỦA TỆP "TEST" ĐƯỢC DỊCH NGƯỢC TỪ ẢNH CỦA BẠN
+        window.TEST_FILE_XML = `<xml xmlns="https://developers.google.com/blockly/xml"><block type="motors_turn_right" x="30" y="30"><value name="speed"><shadow type="math_number"><field name="NUM">50</field></shadow></value><next><block type="time_delay"><value name="ms"><shadow type="math_number"><field name="NUM">1.9</field></shadow></value><next><block type="motors_go_forward"><value name="speed"><shadow type="math_number"><field name="NUM">50</field></shadow></value><next><block type="time_delay"><value name="ms"><shadow type="math_number"><field name="NUM">11</field></shadow></value><next><block type="motors_turn_left"><value name="speed"><shadow type="math_number"><field name="NUM">50</field></shadow></value><next><block type="time_delay"><value name="ms"><shadow type="math_number"><field name="NUM">1.9</field></shadow></value><next><block type="motors_go_forward"><value name="speed"><shadow type="math_number"><field name="NUM">50</field></shadow></value><next><block type="time_delay"><value name="ms"><shadow type="math_number"><field name="NUM">8</field></shadow></value></block></next></block></next></block></next></block></next></block></next></block></next></block></next></block></xml>`;
+
+        // 2. TỆP SENSOR_ADV
+        //window.SENSOR_FILE_XML = '<xml xmlns="https://developers.google.com/blockly/xml"><block type="control_while" x="30" y="30"><value name="COND"><block type="logic_boolean"><field name="BOOL">TRUE</field></block></value><statement name="DO"><block type="controls_if"><mutation else="1"></mutation><value name="IF0"><block type="logic_compare"><field name="OP">LT</field><value name="A"><block type="sensors_getdistance"></block></value><value name="B"><block type="math_number"><field name="NUM">300</field></block></value></block></value><statement name="DO0"><block type="motors_turn_left"><value name="speed"><shadow type="math_number"><field name="NUM">80</field></shadow></value><next><block type="time_delay"><value name="ms"><shadow type="math_number"><field name="NUM">0.6</field></shadow></value></block></next></block></statement><statement name="ELSE"><block type="motors_go_forward"><value name="speed"><shadow type="math_number"><field name="NUM">100</field></shadow></value><next><block type="time_delay"><value name="ms"><shadow type="math_number"><field name="NUM">0.1</field></shadow></value></block></next></block></statement></block></statement></block></xml>';
+
+        function getStarredFiles() {
+            try { return JSON.parse(localStorage.getItem(STAR_STORAGE_KEY)) || []; } catch(e) { return []; }
+        }
+
+        window.toggleStar = function(name, event) {
+            event.stopPropagation(); 
+            let starred = getStarredFiles();
+            let index = starred.indexOf(name);
+            if (index > -1) { starred.splice(index, 1); } 
+            else { starred.push(name); } 
+            localStorage.setItem(STAR_STORAGE_KEY, JSON.stringify(starred));
+            window.userClickedFiles(); 
+        };
+
+        window.userClickedImport = function() {
+            var runtimeCode = (window.currentGeneratedCode || "").trim();
+            window.lastImportedCode = runtimeCode;
+            if (!runtimeCode) {
+                alert(currentLang === "vi" ? "Chưa có code (thêm khối lệnh hoặc nối khối vào Start)." : "No code to import (add blocks or connect them to Start).");
+                return;
+            }
+            if (window.sendToRobot) {
+                window.sendToRobot("CODE:" + runtimeCode);
+                window.isSimPlaying = true;
+                updatePlayIcon(true);
+                var btn = document.getElementById("btnImport");
+                var oldText = btn.innerText;
+                btn.innerText = "✓ ĐÃ NẠP"; 
+                btn.style.backgroundColor = "#4CAF50";
+                setTimeout(() => { btn.innerText = oldText; btn.style.backgroundColor = ""; }, 1000);
+            } else { alert("Lỗi kết nối!"); }
+        };
+
+        window.userClickedSave = function() { 
+            var name = document.getElementById("projectName").innerText.trim(); 
+            if (!name) return alert("Chưa đặt tên!"); 
+            if (["TEST", "SENSOR_ADV"].includes(name)) return alert(currentLang === "vi" ? "Không thể ghi đè các tệp mặc định của hệ thống!" : "Cannot overwrite system default files!");
+            localStorage.setItem(STORAGE_PREFIX + name, Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace))); 
+            alert(currentLang === "vi" ? "Đã lưu thành công!" : "Saved successfully!"); 
+        };
+
+        window.userClickedFiles = function() { 
+            var container = document.getElementById("fileSubmenuContainer"); 
+            if (!container) return;
+            container.innerHTML = ""; 
+            
+            var allFiles = [];
+            var starred = getStarredFiles();
+            
+            for (var i = 0; i < localStorage.length; i++) { 
+                var key = localStorage.key(i); 
+                if (key.startsWith(STORAGE_PREFIX)) { 
+                    allFiles.push(key.replace(STORAGE_PREFIX, ""));
+                } 
+            } 
+
+            container.innerHTML += `
+                <div class="nav-item" style="display:flex; justify-content:space-between; align-items:center; padding: 8px 15px; background: rgba(25, 118, 210, 0.12);">
+                    <span style="color: gold; cursor: default; margin-right: 8px; font-size: 16px;">★</span>
+                    <span style="flex-grow:1; cursor:pointer; font-weight: 800; font-family: monospace; font-size: 14px; color: #1976D2;" onclick="loadProject('TEST')">TEST</span>
+                    <span style="opacity: 0.3; font-size: 14px; cursor: not-allowed; margin-left:10px;" title="Không Thể Xóa">🔒</span>
+                </div>
+                <div class="nav-item" style="display:flex; justify-content:space-between; align-items:center; padding: 8px 15px; background: rgba(156, 39, 176, 0.12); border-bottom: 2px solid var(--border-color);">
+                    <span style="color: gold; cursor: default; margin-right: 8px; font-size: 16px;">★</span>
+                    <span style="flex-grow:1; cursor:pointer; font-weight: 800; font-family: monospace; font-size: 14px; color: #9C27B0;" onclick="loadProject('SENSOR_ADV')">SENSOR_ADV</span>
+                    <span style="opacity: 0.3; font-size: 14px; cursor: not-allowed; margin-left:10px;" title="Không Thể Xóa">🔒</span>
+                </div>
+            `;
+
+            allFiles.sort((a, b) => {
+                let aStar = starred.includes(a);
+                let bStar = starred.includes(b);
+                if (aStar && !bStar) return -1;
+                if (!aStar && bStar) return 1;
+                return a.localeCompare(b); 
+            });
+
+            allFiles.forEach(name => {
+                let isStar = starred.includes(name);
+                let starIcon = isStar ? '<span style="color: gold;">★</span>' : '<span style="color: var(--brand-text); opacity: 0.5;">☆</span>';
+                container.innerHTML += `
+                    <div class="nav-item" style="display:flex; justify-content:space-between; align-items:center; padding: 8px 15px;">
+                        <span style="cursor:pointer; margin-right: 8px; font-size: 16px; user-select: none;" onclick="toggleStar('${name}', event)">${starIcon}</span>
+                        <span style="flex-grow:1; cursor:pointer; overflow: hidden; text-overflow: ellipsis; max-width: 140px;" onclick="loadProject('${name}')">${name}</span>
+                        <span class="delete-icon" style="color:#d32f2f; cursor:pointer; font-weight:bold; margin-left:10px; font-size: 16px;" title="Xóa" onclick="event.stopPropagation(); deleteProject('${name}')">&times;</span>
+                    </div>
+                `;
+            });
+
+            if (allFiles.length === 0) {
+                container.innerHTML += `<div class="nav-item" style="opacity: 0.6; cursor:default; text-align: center; font-size: 12px;">${currentLang === 'vi' ? 'Chưa có tệp lưu' : 'No saved files'}</div>`; 
+            }
+        };
+
+        window.loadProject = function(name) { 
+            try {
+                workspace.clear(); 
+                if (name === "TEST") {
+                    let dom = Blockly.Xml.textToDom(window.TEST_FILE_XML);
+                    Blockly.Xml.domToWorkspace(dom, workspace); 
+                    document.getElementById("projectName").innerText = name; 
+                } else if (name === "SENSOR_ADV") {
+                    let dom = Blockly.Xml.textToDom(window.SENSOR_FILE_XML);
+                    Blockly.Xml.domToWorkspace(dom, workspace); 
+                    document.getElementById("projectName").innerText = name; 
+                } else {
+                    var txt = localStorage.getItem(STORAGE_PREFIX + name); 
+                    if (txt) { 
+                        let dom = Blockly.Xml.textToDom(txt);
+                        Blockly.Xml.domToWorkspace(dom, workspace); 
+                        document.getElementById("projectName").innerText = name; 
+                    } 
+                }
+                workspace.scrollCenter(); 
+                document.querySelectorAll('.nav-dropdown').forEach(function(m) { m.classList.remove('show'); });
+            } catch (error) {
+                console.error("LỖI CÚ PHÁP AST:", error);
+                alert(currentLang === 'vi' ? "Lỗi: Chưa thể sử dụng" : "Error: Not available");
+            }
+        };
+
+        window.deleteProject = function(name) { 
+            if (["TEST", "SENSOR_ADV"].includes(name)) return; 
+            if(confirm(currentLang === 'vi' ? `Xóa dự án vĩnh viễn: ${name}?` : `Delete project permanently: ${name}?`)) { 
+                localStorage.removeItem(STORAGE_PREFIX + name); 
+                let starred = getStarredFiles();
+                let index = starred.indexOf(name);
+                if(index > -1) {
+                    starred.splice(index, 1);
+                    localStorage.setItem(STAR_STORAGE_KEY, JSON.stringify(starred));
+                }
+                userClickedFiles(); 
+            } 
+        };
+
+       /* =========================================
+           ĐỘNG CƠ RADAR TOÀN CỤC: ĐIỀU HƯỚNG SUB-MENU CHUẨN XÁC
+           ========================================= */
+        document.querySelectorAll('.nav-item.has-submenu').forEach(function(item) {
+            var submenu = item.querySelector('.nav-submenu');
+            if (!submenu) return;
+
+            item.addEventListener('mouseenter', function(e) {
+                // Đóng tất cả các submenu khác trước
+                document.querySelectorAll('.nav-submenu').forEach(function(s) { s.style.display = 'none'; });
+                
+                submenu.style.display = 'flex';
+                var rect = this.getBoundingClientRect();
+                
+                // --- THUẬT TOÁN ĐỊNH VỊ NGANG ---
+                // Mặc định tính toán để bung sang bên PHẢI của menu mẹ
+                var leftPos = rect.right + 2;
+                
+                // Nếu bên phải màn hình không đủ chỗ chứa submenu, tự động lật sang TRÁI của menu mẹ
+                if (leftPos + submenu.offsetWidth > window.innerWidth) {
+                    leftPos = rect.left - submenu.offsetWidth - 2;
+                }
+                
+                // --- THUẬT TOÁN ĐỊNH VỊ DỌC ---
+                var topPos = rect.top;
+                // Nếu menu quá dài và chạm đáy màn hình, dịch chuyển ngược nó lên trên
+                if (topPos + submenu.offsetHeight > window.innerHeight) {
+                    topPos = window.innerHeight - submenu.offsetHeight - 15;
+                }
+                
+                submenu.style.left = leftPos + 'px';
+                submenu.style.top = topPos + 'px';
+            });
+
+            // Giữ cho submenu không bị biến mất khi di chuột từ menu mẹ sang chính nó
+            item.addEventListener('mouseleave', function(e) {
+                let relatedTarget = e.relatedTarget;
+                if (relatedTarget && submenu.contains(relatedTarget)) return;
+                submenu.style.display = 'none';
+            });
+
+            submenu.addEventListener('mouseleave', function(e) {
+                let relatedTarget = e.relatedTarget;
+                if (relatedTarget && item.contains(relatedTarget)) return;
+                this.style.display = 'none';
+            });
+        });
+
+        // Đóng toàn bộ menu con khi click ra ngoài
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.nav-submenu').forEach(function(s) { s.style.display = 'none'; });
+        });
+    </script>
+</body>
+</html>

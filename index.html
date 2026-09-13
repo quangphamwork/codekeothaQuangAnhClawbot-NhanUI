@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Khóa Học Robotics - Infographic</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    min-height: 100vh;
+    padding: 40px 20px;
+    color: #fff;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 50px;
+    position: relative;
+  }
+  .header h1 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, #00d2ff, #7b2ff7, #ff6fd8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .header .subtitle {
+    font-size: 1.15rem;
+    color: #b8c0e0;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+  .header .robot-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 0 20px rgba(123,47,247,0.5));
+  }
+  .header .tag-line {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 6px 24px;
+    border-radius: 30px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    font-size: 0.9rem;
+    color: #a0aec0;
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+  }
+  .progress-dot {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.85rem;
+    color: #fff;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+  .progress-line {
+    width: 60px; height: 4px;
+    border-radius: 2px;
+    z-index: 1;
+  }
+  .level-label {
+    text-align: center;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 30px;
+  }
+  .level-label span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 14px;
+    border-radius: 12px;
+  }
+  .level-basic { background: rgba(0,210,255,0.15); color: #00d2ff; }
+  .level-inter { background: rgba(168,85,247,0.15); color: #a855f7; }
+  .level-adv   { background: rgba(255,111,216,0.15); color: #ff6fd8; }
+
+  /* TIMELINE */
+  .timeline {
+    position: relative;
+    padding-left: 0;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 50px;
+    top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, #00d2ff, #7b2ff7, #ff6fd8, #ff9a56);
+    border-radius: 2px;
+  }
+
+  .lesson {
+    position: relative;
+    margin-bottom: 35px;
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+  }
+
+  .lesson-number {
+    flex-shrink: 0;
+    width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .lesson-number .circle {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .lesson-number .circle::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.15);
+  }
+
+  .lesson-card {
+    flex: 1;
+    border-radius: 20px;
+    padding: 28px 30px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .lesson-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+  .lesson-card .card-icon {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+    display: inline-block;
+  }
+  .lesson-card h3 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .lesson-card .en-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.6;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .lesson-card p {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.8);
+  }
+  .lesson-card .keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  .lesson-card .keywords span {
+    padding: 3px 12px;
+    border-radius: 14px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+  }
+  .lesson-card .corner-deco {
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    opacity: 0.08;
+  }
+
+  /* COLOR SCHEMES */
+  .c1 .circle { background: linear-gradient(135deg, #00d2ff, #0ea5e9); }
+  .c1 .lesson-card { background: linear-gradient(135deg, rgba(0,210,255,0.1), rgba(14,165,233,0.05)); }
+  .c1 h3 { color: #5ee7ff; }
+  .c1 .corner-deco { background: #00d2ff; }
+
+  .c2 .circle { background: linear-gradient(135deg, #34d399, #10b981); }
+  .c2 .lesson-card { background: linear-gradient(135deg, rgba(52,211,153,0.1), rgba(16,185,129,0.05)); }
+  .c2 h3 { color: #6ee7b7; }
+  .c2 .corner-deco { background: #34d399; }
+
+  .c3 .circle { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+  .c3 .lesson-card { background: linear-gradient(135deg, rgba(251,191,36,0.1), rgba(245,158,11,0.05)); }
+  .c3 h3 { color: #fcd34d; }
+  .c3 .corner-deco { background: #fbbf24; }
+
+  .c4 .circle { background: linear-gradient(135deg, #f97316, #ea580c); }
+  .c4 .lesson-card { background: linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,88,12,0.05)); }
+  .c4 h3 { color: #fdba74; }
+  .c4 .corner-deco { background: #f97316; }
+
+  .c5 .circle { background: linear-gradient(135deg, #a855f7, #7c3aed); }
+  .c5 .lesson-card { background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(124,58,237,0.05)); }
+  .c5 h3 { color: #c4b5fd; }
+  .c5 .corner-deco { background: #a855f7; }
+
+  .c6 .circle { background: linear-gradient(135deg, #ec4899, #db2777); }
+  .c6 .lesson-card { background: linear-gradient(135deg, rgba(236,72,153,0.1), rgba(219,39,119,0.05)); }
+  .c6 h3 { color: #f9a8d4; }
+  .c6 .corner-deco { background: #ec4899; }
+
+  .c7 .circle { background: linear-gradient(135deg, #ff6fd8, #fc5c7d); }
+  .c7 .lesson-card { background: linear-gradient(135deg, rgba(255,111,216,0.1), rgba(252,92,125,0.05)); }
+  .c7 h3 { color: #fda4af; }
+  .c7 .corner-deco { background: #ff6fd8; }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    margin-top: 50px;
+    padding: 30px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .footer .rocket { font-size: 2.5rem; margin-bottom: 10px; }
+  .footer h3 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.4rem;
+    background: linear-gradient(90deg, #00d2ff, #ff6fd8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .footer p { color: #a0aec0; font-size: 0.9rem; margin-top: 6px; }
+
+  .skills-row {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .skill-badge {
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: #cbd5e1;
+  }
+
+  @media (max-width: 700px) {
+    .header h1 { font-size: 2rem; }
+    .timeline::before { left: 28px; }
+    .lesson-number { width: 56px; }
+    .lesson-number .circle { width: 42px; height: 42px; font-size: 1.1rem; }
+    .lesson-card { padding: 20px; }
+    .lesson { gap: 15px; }
+    .progress-line { width: 30px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <span class="robot-icon">&#129302;</span>
+    <h1>Khóa Học Robotics</h1>
+    <div class="subtitle">7 Bài Học &bull; Từ Cơ Bản Đến Nâng Cao &bull; Dành Cho Học Sinh Cấp 2</div>
+    <div class="tag-line">&#128640; Hành trình từ người mới đến nhà phát minh robot!</div>
+  </div>
+
+  <!-- PROGRESS OVERVIEW -->
+  <div class="level-label">
+    <span class="level-basic">Cơ bản</span>
+    <span class="level-inter">Trung cấp</span>
+    <span class="level-adv">Nâng cao</span>
+  </div>
+  <div class="progress-bar">
+    <div class="progress-dot" style="background:linear-gradient(135deg,#00d2ff,#0ea5e9)">1</div>
+    <div class="progress-line" style="background:linear-gradient(90deg,#00d2ff,#34d399)"></div>
+    <div class="progress-dot" style="background:linear-gradient(135deg,#34d399,#10b981)">2</div>
+    <div class="progress-line" style="background:linear-gradient(90deg,#34d399,#fbbf24)"></div>
+    <div class="progress-dot" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">3</div>
+    <div class="progress-line" style="background:linear-gradient(90deg,#fbbf24,#f97316)"></div>
+    <div class="progress-dot" style="background:linear-gradient(135deg,#f97316,#ea580c)">4</div>
+    <div class="progress-line" style="background:linear-gradient(90deg,#f97316,#a855f7)"></div>
+    <div class="progress-dot" style="background:linear-gradient(135deg,#a855f7,#7c3aed)">5</div>
+    <div class="progress-line" style="background:linear-gradient(90deg,#a855f7,#ec4899)"></div>
+    <div class="progress-dot" style="background:linear-gradient(135deg,#ec4899,#db2777)">6</div>
+    <div class="progress-line" style="background:linear-gradient(90deg,#ec4899,#ff6fd8)"></div>
+    <div class="progress-dot" style="background:linear-gradient(135deg,#ff6fd8,#fc5c7d)">7</div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="timeline">
+
+    <!-- Bài 1 -->
+    <div class="lesson c1">
+      <div class="lesson-number"><div class="circle">1</div></div>
+      <div class="lesson-card">
+        <div class="corner-deco"></div>
+        <div class="card-icon">&#127758;</div>
+        <h3>Giới Thiệu Về Robotics</h3>
+        <span class="en-title">Introduction to Robotics</span>
+        <p>Khám phá thế giới robot: các loại robot từ công nghiệp đến gia đình, ứng dụng thực tế và cơ hội nghề nghiệp. Làm quen với robot kit, phần mềm mô phỏng và các cuộc thi Robotics nổi bật.</p>
+        <div class="keywords">
+          <span>&#129302; Các loại robot</span>
+          <span>&#127942; Cuộc thi</span>
+          <span>&#128218; Robot kit</span>
+          <span>&#128187; Mô phỏng</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bài 2 -->
+    <div class="lesson c2">
+      <div class="lesson-number"><div class="circle">2</div></div>
+      <div class="lesson-card">
+        <div class="corner-deco"></div>
+        <div class="card-icon">&#128187;</div>
+        <h3>Lập Trình Robot 1</h3>
+        <span class="en-title">Robot Programming 1</span>
+        <p>Làm quen với lập trình qua phần mềm mô phỏng. Học các khái niệm cơ bản: biến, vòng lặp, điều kiện. Thực hành điều khiển robot ảo bằng các bài toán đơn giản và thú vị.</p>
+        <div class="keywords">
+          <span>&#128421; Mô phỏng</span>
+          <span>&#128736; Lập trình cơ bản</span>
+          <span>&#127922; Bài toán thực hành</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bài 3 -->
+    <div class="lesson c3">
+      <div class="lesson-number"><div class="circle">3</div></div>
+      <div class="lesson-card">
+        <div class="corner-deco"></div>
+        <div class="card-icon">&#9889;</div>
+        <h3>Hệ Thống Điện Tử Trong Robot</h3>
+        <span class="en-title">Electrical System</span>
+        <p>Tìm hiểu mạch điện, bộ mạch in (PCB), vi điều khiển, cảm biến và hệ thống nguồn. Hiểu cách các linh kiện điện tử kết nối và hoạt động bên trong một robot.</p>
+        <div class="keywords">
+          <span>&#128268; Mạch điện</span>
+          <span>&#129520; Cảm biến</span>
+          <span>&#128267; Nguồn điện</span>
+          <span>&#128300; Vi điều khiển</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bài 4 -->
+    <div class="lesson c4">
+      <div class="lesson-number"><div class="circle">4</div></div>
+      <div class="lesson-card">
+        <div class="corner-deco"></div>
+        <div class="card-icon">&#9881;&#65039;</div>
+        <h3>Cơ Khí Robot 1 – Chuyển Động Học</h3>
+        <span class="en-title">Kinematics</span>
+        <p>Khám phá các dạng chuyển động, bậc tự do (Degrees of Freedom) và sơ đồ chuyển động. Phân tích cách robot thực tế di chuyển và áp dụng vào robot kit của bạn.</p>
+        <div class="keywords">
+          <span>&#128260; Chuyển động</span>
+          <span>&#128208; Bậc tự do</span>
+          <span>&#128736; Robot kit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bài 5 -->
+    <div class="lesson c5">
+      <div class="lesson-number"><div class="circle">5</div></div>
+      <div class="lesson-card">
+        <div class="corner-deco"></div>
+        <div class="card-icon">&#128170;</div>
+        <h3>Cơ Khí Robot 2 – Động Lực Học</h3>
+        <span class="en-title">Dynamics</span>
+        <p>Áp dụng Toán và Vật lý vào Robotics: hệ thống bánh răng, tĩnh học, động lực học. Bắt đầu làm quen với tư duy và quy trình thiết kế sản phẩm robot.</p>
+        <div class="keywords">
+          <span>&#128290; Toán &amp; Lý</span>
+          <span>&#9881; Bánh răng</span>
+          <span>&#128221; Thiết kế</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bài 6 -->
+    <div class="lesson c6">
+      <div class="lesson-number"><div class="circle">6</div></div>
+      <div class="lesson-card">
+        <div class="corner-deco"></div>
+        <div class="card-icon">&#128296;</div>
+        <h3>Lập Trình Robot 2</h3>
+        <span class="en-title">Robot Programming 2</span>
+        <p>Nâng cao kỹ năng lập trình: kết hợp nhiều cảm biến và phần cứng, giải quyết bài toán phức tạp hơn. Rèn luyện tư duy thiết kế chương trình và kỹ năng debug (tìm và sửa lỗi).</p>
+        <div class="keywords">
+          <span>&#129520; Đa cảm biến</span>
+          <span>&#128027; Debug</span>
+          <span>&#129504; Tư duy thiết kế</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bài 7 -->
+    <div class="lesson c7">
+      <div class="lesson-number"><div class="circle">7</div></div>
+      <div class="lesson-card">
+        <div class="corner-deco"></div>
+        <div class="card-icon">&#129504;</div>
+        <h3>AI Trong Robotics</h3>
+        <span class="en-title">AI in Robotics</span>
+        <p>Khám phá Trí tuệ nhân tạo (AI) và cách ứng dụng trong robot hiện đại: nhận diện vật thể, dẫn đường tự động, ra quyết định thông minh và tương tác với môi trường.</p>
+        <div class="keywords">
+          <span>&#129302; AI</span>
+          <span>&#128065; Nhận diện</span>
+          <span>&#128506; Dẫn đường</span>
+          <span>&#128161; Ra quyết định</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="rocket">&#127891;</div>
+    <h3>Hoàn thành khóa học – Trở thành nhà Robotics trẻ!</h3>
+    <p>Sau 7 bài học, bạn sẽ nắm vững từ lập trình, điện tử, cơ khí đến trí tuệ nhân tạo.</p>
+    <div class="skills-row">
+      <span class="skill-badge">&#128187; Lập trình</span>
+      <span class="skill-badge">&#9889; Điện tử</span>
+      <span class="skill-badge">&#9881;&#65039; Cơ khí</span>
+      <span class="skill-badge">&#129504; AI</span>
+      <span class="skill-badge">&#128736; Thiết kế</span>
+      <span class="skill-badge">&#129520; Cảm biến</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

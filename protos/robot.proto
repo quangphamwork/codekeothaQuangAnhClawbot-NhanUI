@@ -1,0 +1,576 @@
+﻿#VRML_SIM R2023b utf8
+# license: Apache License 2.0
+# license url: http://www.apache.org/licenses/LICENSE-2.0
+# This is a proto file for Webots for the robot
+# Parallel linkage mechanism using Connector for closed-loop constraint
+
+PROTO robot [
+  field  SFVec3f     translation     0 0 0
+  field  SFRotation  rotation        0 0 1 0
+  field  SFString    name            "robot"
+  field  SFString    controller      "void"
+  field  MFString    controllerArgs  []
+  field  SFString    customData      ""
+  field  SFBool      supervisor      FALSE
+  field  SFBool      synchronization TRUE
+  field  SFBool      selfCollision   FALSE
+]
+{
+  Robot {
+    translation IS translation
+    rotation IS rotation
+    controller IS controller
+    controllerArgs IS controllerArgs
+    customData IS customData
+    supervisor IS supervisor
+    synchronization IS synchronization
+    selfCollision IS selfCollision
+    children [
+      Transform {
+        rotation 1.000000 0.000000 0.000000 1.570800
+        scale 0.001000 0.001000 0.001000
+        children [
+          DEF BaseBot-25_04_001_visual CadShape {
+            url "meshes/dae/BaseBot-25.04.001.dae"
+          }
+        ]
+      }
+      # ARM 1 - Main arm with motor
+      DEF arm1_joint HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 1.000000 0.000000 -0.000004
+          anchor 0.012130 0.095640 0.158500
+        }
+        device [
+          RotationalMotor {
+            name "arm1_joint"
+            maxVelocity 1.0
+            minPosition -3.14
+            maxPosition 3.14
+            maxTorque 10.0
+          }
+          PositionSensor {
+            name "arm1_joint_sensor"
+          }
+        ]
+        endPoint DEF arm_1_link Solid {
+          translation 0.012130 0.095640 0.158500
+          rotation -0.000000 1.000000 0.000000 1.570800
+          children [
+            Transform {
+              rotation 0.577350 -0.577350 0.577352 2.094399
+              scale 0.001000 0.001000 0.001000
+              children [
+                DEF BaseBot-25_04_007_visual CadShape {
+                  url "meshes/dae/BaseBot-25.04.007.dae"
+                }
+              ]
+            }
+            DEF gripper1_joint HingeJoint {
+              jointParameters HingeJointParameters {
+                axis 0.000000 0.000000 1.000000
+                anchor 0.071750 -0.474610 -0.005000
+              }
+              device [
+                RotationalMotor {
+                  name "gripper1_joint"
+                  maxVelocity 1.0
+                  minPosition -1.57
+                  maxPosition 1.57
+                  maxTorque 10.0
+                }
+                PositionSensor {
+                  name "gripper1_joint_sensor"
+                }
+              ]
+              endPoint DEF gripper_1_link Solid {
+                translation 0.071750 -0.474610 -0.005000
+                children [
+                  Transform {
+                    rotation 0.577350 -0.577350 0.577352 2.094399
+                    scale 0.001000 0.001000 0.001000
+                    children [
+                      DEF BaseBot-25_04_008_visual CadShape {
+                        url "meshes/dae/BaseBot-25.04.008.dae"
+                      }
+                    ]
+                  }
+                  # CONNECTOR on gripper_1_link - receives connection from arm_2_link
+                  DEF gripper_arm2_connector Connector {
+                    translation -0.004 0.0 0.040
+                    rotation 1 0 0 0
+                    name "gripper_arm2_connector"
+                    type "passive"
+                    isLocked TRUE
+                    autoLock TRUE
+                    distanceTolerance 0.1
+                    axisTolerance 1.0
+                    rotationTolerance 1.0
+                    numberOfRotations 0
+                    snap TRUE
+                    tensileStrength -1
+                    shearStrength -1
+                  }
+                  DEF gripper_2l_joint HingeJoint {
+                    jointParameters HingeJointParameters {
+                      axis 1.000000 0.000003 0.000004
+                      anchor -0.025410 -0.059690 0.012000
+                    }
+                    endPoint DEF gripper_2l_link Solid {
+                      translation -0.025410 -0.059690 0.012000
+                      rotation -0.707105 -0.000001 -0.707108 3.141591
+                      children [
+                        Transform {
+                          rotation -1.000000 0.000000 0.000000 1.570800
+                          scale 0.001000 0.001000 0.001000
+                          children [
+                            DEF BaseBot-25_04_010_visual CadShape {
+                              url "meshes/dae/BaseBot-25.04.010.dae"
+                            }
+                          ]
+                        }
+                        DEF gripper_4l_joint HingeJoint {
+                          jointParameters HingeJointParameters {
+                            axis 0.000000 -0.000003 -1.000000
+                            anchor 0.011670 0.028720 -0.000090
+                          }
+                          endPoint DEF gripper_4l_link Solid {
+                            translation 0.011670 0.028720 -0.000090
+                            rotation 1.000000 0.000000 0.000000 3.141590
+                            children [
+                              Transform {
+                                rotation 1.000000 0.000000 0.000000 1.570800
+                                scale 0.001000 0.001000 0.001000
+                                children [
+                                  DEF BaseBot-25_04_011_visual CadShape {
+                                    url "meshes/dae/BaseBot-25.04.011.dae"
+                                  }
+                                ]
+                              }
+                            ]
+                            name "gripper_4l_link"
+                            boundingObject Pose {
+                              rotation 1.000000 0.000000 0.000000 1.570800
+                              children [
+                                DEF BaseBot-25_04_011 Mesh {
+                                  url "meshes/dae/BaseBot-25.04.011.dae"
+                                }
+                              ]
+                            }
+                            physics Physics {
+                            }
+                          }
+                        }
+                      ]
+                      name "gripper_2l_link"
+                      boundingObject Pose {
+                        rotation -1.000000 0.000000 0.000000 1.570800
+                        children [
+                          DEF BaseBot-25_04_010 Mesh {
+                            url "meshes/dae/BaseBot-25.04.010.dae"
+                          }
+                        ]
+                      }
+                      physics Physics {
+                      }
+                    }
+                  }
+                  DEF gripper_2r_joint HingeJoint {
+                    jointParameters HingeJointParameters {
+                      axis 1.000000 0.000003 0.000004
+                      anchor -0.025410 -0.059690 -0.015000
+                    }
+                    endPoint DEF gripper_2r_link Solid {
+                      translation -0.025410 -0.059690 -0.015000
+                      rotation -0.707105 -0.000001 -0.707108 3.141591
+                      children [
+                        Transform {
+                          rotation -1.000000 0.000000 0.000000 1.570800
+                          scale 0.001000 0.001000 0.001000
+                          children [
+                            DEF BaseBot-25_04_009_visual CadShape {
+                              url "meshes/dae/BaseBot-25.04.009.dae"
+                            }
+                          ]
+                        }
+                        DEF gripper_4r_joint HingeJoint {
+                          jointParameters HingeJointParameters {
+                            axis 0.000000 -0.000003 -1.000000
+                            anchor -0.011640 0.028730 -0.000090
+                          }
+                          endPoint DEF gripper_4r_link Solid {
+                            translation -0.011640 0.028730 -0.000090
+                            rotation 1.000000 0.000000 0.000000 3.141590
+                            children [
+                              Transform {
+                                rotation 1.000000 0.000000 0.000000 1.570800
+                                scale 0.001000 0.001000 0.001000
+                                children [
+                                  DEF BaseBot-25_04_012_visual CadShape {
+                                    url "meshes/dae/BaseBot-25.04.012.dae"
+                                  }
+                                ]
+                              }
+                            ]
+                            name "gripper_4r_link"
+                            boundingObject Pose {
+                              rotation 1.000000 0.000000 0.000000 1.570800
+                              children [
+                                DEF BaseBot-25_04_012 Mesh {
+                                  url "meshes/dae/BaseBot-25.04.012.dae"
+                                }
+                              ]
+                            }
+                            physics Physics {
+                            }
+                          }
+                        }
+                      ]
+                      name "gripper_2r_link"
+                      boundingObject Pose {
+                        rotation -1.000000 0.000000 0.000000 1.570800
+                        children [
+                          DEF BaseBot-25_04_009 Mesh {
+                            url "meshes/dae/BaseBot-25.04.009.dae"
+                          }
+                        ]
+                      }
+                      physics Physics {
+                      }
+                    }
+                  }
+                  DEF gripper_3l_joint HingeJoint {
+                    jointParameters HingeJointParameters {
+                      axis -1.000000 0.000000 -0.000004
+                      anchor -0.025410 -0.080090 0.003740
+                    }
+                    endPoint DEF gripper_3l_link Solid {
+                      translation -0.025410 -0.080090 0.003740
+                      rotation 0.000000 -1.000000 0.000000 1.570800
+                      children [
+                        Transform {
+                          rotation 1.000000 0.000000 0.000000 1.570800
+                          scale 0.001000 0.001000 0.001000
+                          children [
+                            DEF BaseBot-25_04_013_visual CadShape {
+                              url "meshes/dae/BaseBot-25.04.013.dae"
+                            }
+                          ]
+                        }
+                      ]
+                      name "gripper_3l_link"
+                      boundingObject Pose {
+                        rotation 1.000000 0.000000 0.000000 1.570800
+                        children [
+                          DEF BaseBot-25_04_013 Mesh {
+                            url "meshes/dae/BaseBot-25.04.013.dae"
+                          }
+                        ]
+                      }
+                      physics Physics {
+                      }
+                    }
+                  }
+                  DEF gripper_3r_joint HingeJoint {
+                    jointParameters HingeJointParameters {
+                      axis -1.000000 0.000000 -0.000004
+                      anchor -0.025410 -0.080090 -0.006740
+                    }
+                    endPoint DEF gripper_3r_link Solid {
+                      translation -0.025410 -0.080090 -0.006740
+                      rotation 0.000000 -1.000000 0.000000 1.570800
+                      children [
+                        Transform {
+                          rotation 1.000000 0.000000 0.000000 1.570800
+                          scale 0.001000 0.001000 0.001000
+                          children [
+                            DEF BaseBot-25_04_014_visual CadShape {
+                              url "meshes/dae/BaseBot-25.04.014.dae"
+                            }
+                          ]
+                        }
+                      ]
+                      name "gripper_3r_link"
+                      boundingObject Pose {
+                        rotation 1.000000 0.000000 0.000000 1.570800
+                        children [
+                          DEF BaseBot-25_04_014 Mesh {
+                            url "meshes/dae/BaseBot-25.04.014.dae"
+                          }
+                        ]
+                      }
+                      physics Physics {
+                      }
+                    }
+                  }
+                ]
+                name "gripper_1_link"
+                boundingObject Pose {
+                  rotation 0.577350 -0.577350 0.577352 2.094399
+                  children [
+                    DEF BaseBot-25_04_008 Mesh {
+                      url "meshes/dae/BaseBot-25.04.008.dae"
+                    }
+                  ]
+                }
+                physics Physics {
+                }
+              }
+            }
+          ]
+          name "arm_1_link"
+          boundingObject Pose {
+            rotation 0.577350 -0.577350 0.577352 2.094399
+            children [
+              DEF BaseBot-25_04_007 Mesh {
+                url "meshes/dae/BaseBot-25.04.007.dae"
+              }
+            ]
+          }
+          physics Physics {
+          }
+        }
+      }
+      # ARM 2 - Parallel linkage bar with Connector at endpoint
+      DEF arm2_joint HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 1.000000 0.000000 -0.000004
+          anchor 0.008180 0.095620 0.198490
+        }
+        device [
+          RotationalMotor {
+            name "arm2_joint"
+            maxVelocity 1.0
+            minPosition -3.14
+            maxPosition 3.14
+            maxTorque 10.0
+          }
+          PositionSensor {
+            name "arm2_joint_sensor"
+          }
+        ]
+        endPoint DEF arm_2_link Solid {
+          translation 0.008180 0.095620 0.198490
+          rotation -0.000000 1.000000 0.000000 1.570800
+          children [
+            Transform {
+              rotation 0.577350 -0.577350 0.577352 2.094399
+              scale 0.001000 0.001000 0.001000
+              children [
+                DEF BaseBot-25_04_006_visual CadShape {
+                  url "meshes/dae/BaseBot-25.04.006.dae"
+                }
+              ]
+            }
+            # CONNECTOR on arm_2_link endpoint - connects to gripper_1_link
+            DEF arm2_end_connector Connector {
+              translation 0.0636 -0.474610 0.0
+              rotation 1 0 0 0
+              name "arm2_end_connector"
+              type "active"
+              isLocked TRUE
+              autoLock TRUE
+              distanceTolerance 0.1
+              axisTolerance 1.0
+              rotationTolerance 1.0
+              numberOfRotations 0
+              snap TRUE
+              tensileStrength -1
+              shearStrength -1
+            }
+          ]
+          name "arm_2_link"
+          boundingObject Pose {
+            rotation 0.577350 -0.577350 0.577352 2.094399
+            children [
+              DEF BaseBot-25_04_006 Mesh {
+                url "meshes/dae/BaseBot-25.04.006.dae"
+              }
+            ]
+          }
+          physics Physics {
+          }
+        }
+      }
+      DEF front_left_wheel_joint HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 1.000000 0.000000 -0.000004
+          anchor 0.169890 -0.155420 -0.041940
+        }
+        device [
+          RotationalMotor {
+            name "front_left_wheel_joint"
+            maxVelocity 10.0
+            maxTorque 10.0
+          }
+          PositionSensor {
+            name "front_left_wheel_joint_sensor"
+          }
+        ]
+        endPoint DEF wheel_front_left_link Solid {
+          translation 0.169890 -0.155420 -0.041940
+          rotation -0.000000 1.000000 0.000000 1.570800
+          children [
+            Transform {
+              rotation 0.577350 -0.577350 0.577352 2.094399
+              scale 0.001000 0.001000 0.001000
+              children [
+                DEF BaseBot-25_04_002_visual CadShape {
+                  url "meshes/dae/BaseBot-25.04.002.dae"
+                }
+              ]
+            }
+          ]
+          name "wheel_front_left_link"
+          boundingObject Pose {
+            rotation 0.577350 -0.577350 0.577352 2.094399
+            children [
+              DEF BaseBot-25_04_002 Mesh {
+                url "meshes/dae/BaseBot-25.04.002.dae"
+              }
+            ]
+          }
+          physics Physics {
+          }
+        }
+      }
+      DEF front_right_wheel_joint HingeJoint {
+        jointParameters HingeJointParameters {
+          axis -1.000000 0.000000 -0.000004
+          anchor -0.155640 -0.153370 -0.040930
+        }
+        device [
+          RotationalMotor {
+            name "front_right_wheel_joint"
+            maxVelocity 10.0
+            maxTorque 10.0
+          }
+          PositionSensor {
+            name "front_right_wheel_joint_sensor"
+          }
+        ]
+        endPoint DEF wheel_front_right_link Solid {
+          translation -0.155640 -0.153370 -0.040930
+          rotation 0.000000 -1.000000 0.000000 1.570800
+          children [
+            Transform {
+              rotation 0.577350 0.577350 -0.577352 2.094399
+              scale 0.001000 0.001000 0.001000
+              children [
+                DEF BaseBot-25_04_003_visual CadShape {
+                  url "meshes/dae/BaseBot-25.04.003.dae"
+                }
+              ]
+            }
+          ]
+          name "wheel_front_right_link"
+          boundingObject Pose {
+            rotation 0.577350 0.577350 -0.577352 2.094399
+            children [
+              DEF BaseBot-25_04_003 Mesh {
+                url "meshes/dae/BaseBot-25.04.003.dae"
+              }
+            ]
+          }
+          physics Physics {
+          }
+        }
+      }
+      DEF rear_left_wheel_joint HingeJoint {
+        jointParameters HingeJointParameters {
+          axis 1.000000 0.000000 -0.000004
+          anchor 0.176440 0.110640 -0.040190
+        }
+        device [
+          RotationalMotor {
+            name "rear_left_wheel_joint"
+            maxVelocity 10.0
+            maxTorque 10.0
+          }
+          PositionSensor {
+            name "rear_left_wheel_joint_sensor"
+          }
+        ]
+        endPoint DEF wheel_rear_left_link Solid {
+          translation 0.176440 0.110640 -0.040190
+          rotation -0.000000 1.000000 0.000000 1.570800
+          children [
+            Transform {
+              rotation 0.577350 -0.577350 0.577352 2.094399
+              scale 0.001000 0.001000 0.001000
+              children [
+                DEF BaseBot-25_04_005_visual CadShape {
+                  url "meshes/dae/BaseBot-25.04.005.dae"
+                }
+              ]
+            }
+          ]
+          name "wheel_rear_left_link"
+          boundingObject Pose {
+            rotation 0.577350 -0.577350 0.577352 2.094399
+            children [
+              DEF BaseBot-25_04_005 Mesh {
+                url "meshes/dae/BaseBot-25.04.005.dae"
+              }
+            ]
+          }
+          physics Physics {
+          }
+        }
+      }
+      DEF rear_right_wheel_joint HingeJoint {
+        jointParameters HingeJointParameters {
+          axis -1.000000 0.000000 -0.000004
+          anchor -0.162190 0.110640 -0.040190
+        }
+        device [
+          RotationalMotor {
+            name "rear_right_wheel_joint"
+            maxVelocity 10.0
+            maxTorque 10.0
+          }
+          PositionSensor {
+            name "rear_right_wheel_joint_sensor"
+          }
+        ]
+        endPoint DEF wheel_rear_right_link Solid {
+          translation -0.162190 0.110640 -0.040190
+          rotation 0.000000 -1.000000 0.000000 1.570800
+          children [
+            Transform {
+              rotation 0.577350 0.577350 -0.577352 2.094399
+              scale 0.001000 0.001000 0.001000
+              children [
+                DEF BaseBot-25_04_004_visual CadShape {
+                  url "meshes/dae/BaseBot-25.04.004.dae"
+                }
+              ]
+            }
+          ]
+          name "wheel_rear_right_link"
+          boundingObject Pose {
+            rotation 0.577350 0.577350 -0.577352 2.094399
+            children [
+              DEF BaseBot-25_04_004 Mesh {
+                url "meshes/dae/BaseBot-25.04.004.dae"
+              }
+            ]
+          }
+          physics Physics {
+          }
+        }
+      }
+    ]
+    name IS name
+    boundingObject Pose {
+      rotation 1.000000 0.000000 0.000000 1.570800
+      children [
+        DEF BaseBot-25_04_001 Mesh {
+          url "meshes/dae/BaseBot-25.04.001.dae"
+        }
+      ]
+    }
+    physics Physics {
+    }
+  }
+}

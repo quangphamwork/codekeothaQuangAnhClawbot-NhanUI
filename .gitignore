@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Webots build files
+**/*.o
+**/*.exe
+**/*.dll
+**/*.so
+**/*.dylib
+**/build/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Webots project files
+worlds/.*.wbproj

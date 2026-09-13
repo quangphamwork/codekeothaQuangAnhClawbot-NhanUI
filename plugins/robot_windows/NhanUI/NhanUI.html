@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NhanUI - Clawbot Control</title>
+    <link rel="icon" type="image/png" href="https://cyberbotics.com/assets/images/webots.png">
+
+    <!-- Early global stubs for onclick handlers -->
+    <script>
+        window.switchTab = function(tabId, btn) {
+            if (window._switchTabReal) window._switchTabReal(tabId, btn);
+            else setTimeout(function(){ if (window._switchTabReal) window._switchTabReal(tabId, btn); }, 50);
+        };
+        window.toggleDevice = function() {};
+        window.enableAllDevices = function() {};
+        window.resetDevicePlot = function() {};
+        window.updateSpeed = function() {};
+        window.simControl = function() {};
+        window.sendCommand = function() {};
+        window.toggleSidebar = function() {
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.toggle('collapsed');
+        };
+        window.toggleCameraFeed = function() {};
+        window.saveSingleCameraSnapshot = function() {};
+        window.saveAllCameraSnapshots = function() {};
+        window.toggleCameraFullscreen = function(camName) {};
+    </script>
+
+    <style>
+        /* =========================================
+           ROOT VARIABLES & RESET
+           ========================================= */
+        :root {
+            --gradient-1: #ff6b9d;
+            --gradient-2: #ff8c42;
+            --gradient-3: #ffd93d;
+            --gradient-4: #6bcb77;
+            --gradient-5: #4d96ff;
+            --gradient-6: #845ec2;
+            --menu-width: 220px;
+            --header-height: 50px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        body {
+            background: linear-gradient(-45deg,
+                var(--gradient-1), var(--gradient-2), var(--gradient-3),
+                var(--gradient-4), var(--gradient-5), var(--gradient-6));
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        /* =========================================
+           HEADER
+           ========================================= */
+        #header {
+            height: var(--header-height);
+            background: rgba(26, 32, 44, 0.95);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            z-index: 100;
+        }
+
+        #robotTitle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+        }
+
+        #simControls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sim-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sim-btn:hover { background: rgba(255,255,255,0.3); }
+
+        #timerDisplay {
+            color: #ffd93d;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            min-width: 80px;
+        }
+
+        #connectionStatus {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .connected { background: #48bb78; color: white; }
+        .disconnected { background: #fc8181; color: white; }
+
+        /* =========================================
+           MAIN LAYOUT
+           ========================================= */
+        #mainContainer {
+            display: flex;
+            height: calc(100vh - var(--header-height));
+        }
+
+        /* =========================================
+           SIDEBAR
+           ========================================= */
+        #sidebar {
+            width: var(--menu-width);
+            background: rgba(26, 32, 44, 0.85);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s;
+            overflow: hidden;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #sidebar.collapsed { width: 50px; }
+        #sidebar.collapsed .menu-text,
+        #sidebar.collapsed .menu-section-title { display: none; }
+
+        #menuToggle {
+            padding: 12px;
+            text-align: center;
+        }
+        #menuToggle button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        #menuItems { flex: 1; overflow-y: auto; padding: 5px; }
+
+        .menu-section-title {
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            padding: 10px 12px 5px;
+        }
+
+        .menu-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .menu-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+        .menu-btn.active {
+            background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3));
+            color: white;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.2);
+        }
+        .menu-btn .icon { font-size: 18px; min-width: 24px; text-align: center; }
+
+        /* =========================================
+           CONTENT AREA
+           ========================================= */
+        #contentArea {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .tab-content { display: none; height: 100%; }
+        .tab-content.active { display: flex; flex-wrap: wrap; gap: 15px; }
+
+        /* =========================================
+           PANEL CARDS
+           ========================================= */
+        .panel-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2d3748;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* =========================================
+           HOME TAB - 3-COLUMN LAYOUT
+           ========================================= */
+        #homeTab.active { display: flex; flex-wrap: nowrap; gap: 15px; height: 100%; }
+
+        #homeLeft {
+            width: 280px;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        #homeCenter {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 300px;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        #homeRight {
+            width: 320px;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Programming tab */
+        #programmingTab.active { display: flex; height: 100%; }
+
+        /* Status Grid */
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .status-item {
+            background: rgba(247,250,252,0.9);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+        .status-item .label { font-size: 11px; color: #718096; margin-bottom: 4px; text-transform: uppercase; }
+        .status-item .value { font-size: 18px; font-weight: 700; color: #2d3748; font-family: 'Courier New', monospace; }
+        .status-item.distance .value { color: #e53e3e; }
+        .status-item.state .value { color: #38a169; }
+
+        /* Gripper Controls */
+        .gripper-controls { display: flex; gap: 10px; margin-bottom: 12px; }
+        .gripper-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .gripper-btn.open { background: #4299e1; color: white; }
+        .gripper-btn.close { background: #e53e3e; color: white; }
+        .gripper-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+        /* Speed Slider */
+        .speed-container { margin-top: 8px; }
+        .speed-label { display: flex; justify-content: space-between; font-size: 12px; color: #4a5568; margin-bottom: 4px; }
+        .speed-value { font-weight: 700; color: #4299e1; }
+        input[type="range"] { width: 100%; cursor: pointer; }
+
+        /* Arm Controls */
+        .arm-controls { display: flex; gap: 8px; margin-bottom: 10px; }
+        .arm-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .arm-btn.up { background: #48bb78; color: white; }
+        .arm-btn.down { background: #ed8936; color: white; }
+        .arm-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+
+        .arm-angle-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #4a5568;
+        }
+        .arm-angle-row label { min-width: 90px; }
+        .arm-angle-row input[type="number"] {
+            width: 70px; padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px;
+        }
+
+        /* Preset Grid */
+        .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .preset-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .preset-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .preset-btn.home { background: linear-gradient(135deg, #48bb78, #38a169); }
+        .preset-btn.demo1 { background: linear-gradient(135deg, #ed8936, #dd6b20); }
+        .preset-btn.demo2 { background: linear-gradient(135deg, #e53e3e, #c53030); }
+
+        /* Code Editor */
+        #codeEditor {
+            flex: 1;
+            width: 100%;
+            min-height: 150px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: none;
+            background: #1a202c;
+            color: #a0aec0;
+        }
+
+        .code-actions { display: flex; gap: 8px; margin-top: 8px; }
+        .code-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .code-btn.run { background: #48bb78; color: white; }
+        .code-btn.clear { background: #e53e3e; color: white; }
+        .code-btn:hover { transform: translateY(-1px); }
+
+        /* Console Log */
+        #consoleLog {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            overflow-y: auto;
+            max-height: 100px;
+            color: #4a5568;
+        }
+        .log-entry { padding: 2px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .log-entry.success { color: #38a169; }
+        .log-entry.error { color: #e53e3e; }
+
+        /* =========================================
+           DEVICE TABS
+           ========================================= */
+        .devices-tab.active { display: flex; flex-direction: column; }
+        .devices-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .device-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            width: 350px;
+            min-height: 220px;
+            position: relative;
+        }
+        .device-card h2 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .device-card .value {
+            font-family: 'Courier New', monospace;
+            color: #4299e1;
+            font-weight: 700;
+        }
+        .device-checkbox { cursor: pointer; }
+
+        .plot-container {
+            width: 100%;
+            height: 120px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .plot-canvas { width: 100%; height: 100%; }
+
+        .device-buttons-row {
+            position: absolute;
+            bottom: 8px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            gap: 8px;
+        }
+        .device-small-btn {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            font-size: 11px;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .device-small-btn:hover { background: #f8fafc; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+        /* Tab Header */
+        .tab-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+        }
+        .tab-header h1 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .tab-header-buttons { display: flex; gap: 8px; }
+        .header-btn {
+            padding: 8px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.9);
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .header-btn:hover { background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        /* =========================================
+           CAMERA TAB
+           ========================================= */
+        .camera-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            flex: 1;
+            min-width: 320px;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+        .camera-card.fullscreen {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            max-width: none; min-width: 0; z-index: 1000; border-radius: 0;
+        }
+        .camera-card h2 {
+            font-size: 14px; font-weight: 700; color: #4a5568;
+            margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+        }
+        .camera-view {
+            background: #000; border-radius: 8px; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            flex: 1; min-height: 200px; position: relative;
+        }
+        .camera-view img { display: none; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+        .camera-view img.loaded { display: block; }
+        .camera-placeholder-inner {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #666; font-size: 14px; gap: 10px; padding: 40px;
+        }
+        .camera-placeholder-inner span:first-child { font-size: 48px; }
+        .camera-info {
+            margin-top: 12px; display: flex; flex-wrap: wrap; justify-content: space-between;
+            align-items: center; font-size: 12px; color: #718096;
+            padding: 8px 12px; background: rgba(0,0,0,0.05); border-radius: 6px; gap: 8px; flex-shrink: 0;
+        }
+        .camera-info-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .camera-snapshot-btn {
+            background: #4299e1; color: white; border: none; border-radius: 4px;
+            padding: 4px 8px; cursor: pointer; font-size: 14px; transition: background 0.2s;
+        }
+        .camera-snapshot-btn:hover { background: #3182ce; }
+        .camera-fullscreen-btn {
+            background: #805ad5; color: white; border: none; border-radius: 4px;
+            padding: 4px 8px; cursor: pointer; font-size: 14px; transition: background 0.2s;
+        }
+        .camera-fullscreen-btn:hover { background: #6b46c1; }
+
+        /* Camera Settings Panel */
+        .camera-settings-panel {
+            background: rgba(255,255,255,0.98); border-radius: 10px; padding: 12px;
+            margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .camera-settings-panel h3 { font-size: 13px; color: #4a5568; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .camera-settings-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+        .camera-settings-row label { min-width: 100px; color: #4a5568; }
+        .camera-settings-row select, .camera-settings-row input { padding: 4px 8px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 12px; }
+        .camera-settings-row input[type="range"] { width: 120px; }
+        .camera-perf-badge { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 600; margin-left: 8px; }
+        .camera-perf-badge.low { background: #c6f6d5; color: #276749; }
+        .camera-perf-badge.medium { background: #fef3c7; color: #92400e; }
+        .camera-perf-badge.high { background: #fed7d7; color: #c53030; }
+
+        /* =========================================
+           SETTINGS TAB
+           ========================================= */
+        .settings-section {
+            background: rgba(255,255,255,0.95); border-radius: 14px; padding: 20px;
+            margin-bottom: 15px; max-width: 500px;
+        }
+        .settings-section h2 { font-size: 14px; font-weight: 700; color: #2d3748; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
+        .settings-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 13px; color: #4a5568; }
+        .settings-row label { min-width: 150px; }
+        .settings-row input[type="number"] { width: 80px; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; }
+        .settings-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+
+        /* Branding */
+        #branding { text-align: center; padding: 8px; color: rgba(255,255,255,0.6); font-size: 10px; }
+        .brand-name { font-size: 16px; font-weight: 800; letter-spacing: 3px; }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div id="header">
+        <div id="robotTitle">
+            <span>🤖</span>
+            <span id="robotNameDisplay">Clawbot</span>
+        </div>
+        <div id="simControls">
+            <button class="sim-btn" onclick="simControl('RESET')" title="Reset">&#9198;</button>
+            <button class="sim-btn" id="btnPlay" onclick="simControl('TOGGLE')" title="Play/Pause">&#9654;</button>
+            <span id="timerDisplay">0.00s</span>
+        </div>
+        <span id="connectionStatus" class="disconnected">Disconnected</span>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div id="mainContainer">
+        <!-- SIDEBAR -->
+        <div id="sidebar">
+            <div id="menuToggle">
+                <button onclick="window.toggleSidebar()">&#9776;</button>
+            </div>
+            <div id="menuItems">
+                <div class="menu-section-title">Control</div>
+                <button class="menu-btn active" data-tab="homeTab" onclick="window.switchTab('homeTab', this)">
+                    <span class="icon">&#127968;</span>
+                    <span class="menu-text">Home</span>
+                </button>
+                <button class="menu-btn" data-tab="programmingTab" onclick="window.switchTab('programmingTab', this)">
+                    <span class="icon">&#128187;</span>
+                    <span class="menu-text">Programming</span>
+                </button>
+
+                <div class="menu-section-title">Devices</div>
+                <button class="menu-btn" data-tab="distanceSensorTab" onclick="window.switchTab('distanceSensorTab', this)">
+                    <span class="icon">&#128207;</span>
+                    <span class="menu-text">DistanceSensor</span>
+                </button>
+                <button class="menu-btn" data-tab="positionSensorTab" onclick="window.switchTab('positionSensorTab', this)">
+                    <span class="icon">&#128208;</span>
+                    <span class="menu-text">PositionSensor</span>
+                </button>
+                <button class="menu-btn" data-tab="motorTab" onclick="window.switchTab('motorTab', this)">
+                    <span class="icon">&#9881;</span>
+                    <span class="menu-text">Motors</span>
+                </button>
+                <button class="menu-btn" data-tab="cameraTab" onclick="window.switchTab('cameraTab', this)">
+                    <span class="icon">&#128247;</span>
+                    <span class="menu-text">Camera</span>
+                </button>
+
+                <div class="menu-section-title">System</div>
+                <button class="menu-btn" data-tab="settingsTab" onclick="window.switchTab('settingsTab', this)">
+                    <span class="icon">&#9881;</span>
+                    <span class="menu-text">Settings</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- CONTENT AREA -->
+        <div id="contentArea">
+            <!-- HOME TAB -->
+            <div id="homeTab" class="tab-content active">
+                <!-- Left Panel: Controls -->
+                <div id="homeLeft">
+                    <div class="panel-card">
+                        <div class="panel-title"><span>&#9995;</span> Gripper Control</div>
+                        <div class="gripper-controls">
+                            <button class="gripper-btn open" onclick="sendCommand('CMD:OPEN_GRIPPER')">Open</button>
+                            <button class="gripper-btn close" onclick="sendCommand('CMD:CLOSE_GRIPPER')">Close</button>
+                        </div>
+                        <div class="speed-container">
+                            <div class="speed-label">
+                                <span>Speed</span>
+                                <span class="speed-value" id="speedValue">50%</span>
+                            </div>
+                            <input type="range" id="speedSlider" min="1" max="100" value="50"
+                                   oninput="updateSpeed(this.value)">
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-title"><span>&#129302;</span> Arm Control</div>
+                        <div class="arm-controls">
+                            <button class="arm-btn up" onclick="sendCommand('CMD:ARM_UP')">Arm Up</button>
+                            <button class="arm-btn down" onclick="sendCommand('CMD:ARM_DOWN')">Arm Down</button>
+                        </div>
+                        <div class="arm-angle-row">
+                            <label>Arm angle:</label>
+                            <input type="number" id="armAngleInput" value="0" min="-90" max="90">
+                            <button class="arm-btn up" style="flex:none;padding:6px 12px;" onclick="sendCommand('CMD:ARM_TO:' + document.getElementById('armAngleInput').value)">Go</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-title"><span>&#128663;</span> Movement</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+                            <div></div>
+                            <button class="arm-btn up" onclick="sendCommand('CMD:FORWARD')">Forward</button>
+                            <div></div>
+                            <button class="arm-btn up" onclick="sendCommand('CMD:LEFT')">Left</button>
+                            <button class="arm-btn down" onclick="sendCommand('CMD:STOP')">Stop</button>
+                            <button class="arm-btn up" onclick="sendCommand('CMD:RIGHT')">Right</button>
+                            <div></div>
+                            <button class="arm-btn down" onclick="sendCommand('CMD:BACKWARD')">Back</button>
+                            <div></div>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-title"><span>&#9889;</span> Quick Actions</div>
+                        <div class="preset-grid">
+                            <button class="preset-btn home" onclick="sendCommand('CMD:HOME')">Home</button>
+                            <button class="preset-btn" onclick="runPreset('grasp')">Grasp</button>
+                            <button class="preset-btn demo1" onclick="runPreset('demo1')">Demo 1</button>
+                            <button class="preset-btn demo2" onclick="runPreset('demo2')">Demo 2</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Robot Image + Camera Feed side by side -->
+                <div id="homeRight" style="flex:1;display:flex;flex-direction:column;gap:12px;min-width:0;">
+                    <div style="flex:1;display:flex;gap:12px;min-height:0;">
+                        <!-- Robot Image -->
+                        <div class="panel-card" style="flex:1;display:flex;flex-direction:column;min-width:0;">
+                            <div class="panel-title"><span>&#129302;</span> Robot</div>
+                            <div style="flex:1;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#f0f4f8;">
+                                <img src="robot.jpg" style="width:100%;height:100%;object-fit:contain;">
+                            </div>
+                        </div>
+                        <!-- Camera Feed -->
+                        <div class="panel-card" id="homeCameraPanel" style="flex:1;display:flex;flex-direction:column;min-width:0;">
+                            <div class="panel-title"><span>&#128247;</span> Camera Feed</div>
+                            <div id="homeCameraView" style="flex:1;background:#000;border-radius:8px;display:flex;justify-content:center;align-items:center;position:relative;overflow:hidden;">
+                                <img id="homeCameraFeed" style="width:100%;height:100%;object-fit:cover;display:none;">
+                                <div id="homeCameraPlaceholder" style="color:#666;text-align:center;padding:20px;">
+                                    <div style="font-size:36px;">&#128247;</div>
+                                    <div style="font-size:12px;">Waiting for camera...</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:11px;color:#718096;">
+                                <span id="homeCameraResolution">Resolution: --</span>
+                                <span id="homeCameraFPS">FPS: --</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align:center;padding:4px;color:rgba(255,255,255,0.6);font-size:10px;">
+                        Powered by <strong>NhanUI</strong> v2.0.0
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROGRAMMING TAB -->
+            <div id="programmingTab" class="tab-content">
+                <div style="display:flex;gap:15px;height:100%;flex:1;">
+                    <!-- Left: Status + Console -->
+                    <div style="width:400px;display:flex;flex-direction:column;gap:12px;">
+                        <div class="panel-card">
+                            <div class="panel-title"><span>&#128200;</span> Robot Status</div>
+                            <div class="status-grid">
+                                <div class="status-item distance">
+                                    <div class="label">Distance Sensor</div>
+                                    <div class="value" id="distanceValue">--</div>
+                                </div>
+                                <div class="status-item state">
+                                    <div class="label">Current State</div>
+                                    <div class="value" id="stateValue">IDLE</div>
+                                </div>
+                                <div class="status-item">
+                                    <div class="label">Sim Time</div>
+                                    <div class="value" id="simTimeValue">0.00s</div>
+                                </div>
+                                <div class="status-item">
+                                    <div class="label">Mode</div>
+                                    <div class="value" id="modeValue">READY</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-card" style="flex:1;display:flex;flex-direction:column;">
+                            <div class="panel-title"><span>&#128203;</span> Console Log</div>
+                            <div id="consoleLog" style="flex:1;overflow-y:auto;max-height:none;">
+                                <div class="log-entry">Waiting for connection...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Right: Code Editor -->
+                    <div class="panel-card" style="flex:1;display:flex;flex-direction:column;">
+                        <div class="panel-title"><span>&#128187;</span> Python Code</div>
+                        <textarea id="codeEditor" placeholder="# Python code here
+# Available functions:
+# - robot.go_forward(speed)
+# - robot.go_backward(speed)
+# - robot.turn_left(speed)
+# - robot.turn_right(speed)
+# - robot.arm_up(angle) / robot.arm_down(angle)
+# - robot.open_gripper(angle)
+# - robot.close_gripper(angle)
+# - delay(seconds)
+# - getDistance()
+# - stop_all()
+"></textarea>
+                        <div class="code-actions">
+                            <button class="code-btn run" onclick="runCode()">&#9654; Run Code</button>
+                            <button class="code-btn clear" onclick="clearCode()">Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DISTANCE SENSOR TAB -->
+            <div id="distanceSensorTab" class="tab-content devices-tab">
+                <div class="tab-header" style="width: 100%;">
+                    <h1>Distance Sensors</h1>
+                    <div class="tab-header-buttons">
+                        <button class="header-btn" onclick="enableAllDevices('distanceSensor', false)">Disable all</button>
+                        <button class="header-btn" onclick="enableAllDevices('distanceSensor', true)">Enable all</button>
+                    </div>
+                </div>
+                <div id="distanceSensorDevices" class="devices-container"></div>
+            </div>
+
+            <!-- POSITION SENSOR TAB -->
+            <div id="positionSensorTab" class="tab-content devices-tab">
+                <div class="tab-header" style="width: 100%;">
+                    <h1>Position Sensors</h1>
+                    <div class="tab-header-buttons">
+                        <button class="header-btn" onclick="enableAllDevices('positionSensor', false)">Disable all</button>
+                        <button class="header-btn" onclick="enableAllDevices('positionSensor', true)">Enable all</button>
+                    </div>
+                </div>
+                <div id="positionSensorDevices" class="devices-container"></div>
+            </div>
+
+            <!-- MOTOR TAB -->
+            <div id="motorTab" class="tab-content devices-tab">
+                <div class="tab-header" style="width: 100%;">
+                    <h1>Motors</h1>
+                    <div class="tab-header-buttons">
+                        <button class="header-btn" onclick="enableAllDevices('motor', false)">Disable all</button>
+                        <button class="header-btn" onclick="enableAllDevices('motor', true)">Enable all</button>
+                    </div>
+                </div>
+                <div id="motorDevices" class="devices-container"></div>
+            </div>
+
+            <!-- CAMERA TAB -->
+            <div id="cameraTab" class="tab-content">
+                <div class="tab-header" style="width: 100%;">
+                    <h1>Camera Feed</h1>
+                    <div class="tab-header-buttons">
+                        <button class="header-btn" id="cameraToggleBtn" onclick="toggleCameraFeed()">Pause</button>
+                        <button class="header-btn" onclick="saveAllCameraSnapshots()">Snapshot All</button>
+                    </div>
+                </div>
+
+                <div class="camera-settings-panel">
+                    <h3>Camera Settings <span id="cameraPerfBadge" class="camera-perf-badge medium">Medium CPU</span></h3>
+                    <div class="camera-settings-row">
+                        <label>Target FPS:</label>
+                        <select id="cameraFpsSelect" onchange="changeCameraFps(this.value)">
+                            <option value="5">5 FPS</option>
+                            <option value="10">10 FPS</option>
+                            <option value="15">15 FPS</option>
+                            <option value="20" selected>20 FPS</option>
+                        </select>
+                    </div>
+                    <div class="camera-settings-row">
+                        <label>JPEG Quality:</label>
+                        <input type="range" id="cameraQualitySlider" min="20" max="95" value="60" oninput="changeCameraQuality(this.value)">
+                        <span id="cameraQualityValue">60%</span>
+                    </div>
+                    <div class="camera-settings-row">
+                        <label>Frame Skip:</label>
+                        <select id="cameraFrameSkipSelect" onchange="changeCameraFrameSkip(this.value)">
+                            <option value="0">None</option>
+                            <option value="1" selected>Skip 1</option>
+                            <option value="2">Skip 2</option>
+                            <option value="3">Skip 3</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="cameraContainer" style="display:flex;flex-wrap:wrap;gap:15px;justify-content:center;padding-top:10px;flex:1;">
+                    <div id="cameraPlaceholderCard" class="camera-card">
+                        <h2>Detecting cameras...</h2>
+                        <div class="camera-view">
+                            <div class="camera-placeholder-inner">
+                                <span>&#128247;</span>
+                                <span>Waiting for camera data...</span>
+                            </div>
+                        </div>
+                        <div class="camera-info"><span>No cameras detected yet</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS TAB -->
+            <div id="settingsTab" class="tab-content">
+                <div class="settings-section">
+                    <h2>General Settings</h2>
+                    <div class="settings-row">
+                        <label>Refresh rate (ms):</label>
+                        <input type="number" id="refreshRateInput" value="32" min="16" max="1000">
+                    </div>
+                    <div class="settings-row">
+                        <input type="checkbox" id="recordBackgroundCheckbox">
+                        <label>Record data when plot is hidden</label>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h2>Device Control</h2>
+                    <div class="settings-row">
+                        <button class="header-btn" onclick="enableAllDevices(null, false)">Disable all devices</button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h2>About</h2>
+                    <div class="settings-row"><span>NhanUI v2.0.0 - Custom Robot Window for Clawbot</span></div>
+                    <div class="settings-row"><span>Combines WWI control interface with device monitoring graphs</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script type="module">
+        import RobotWindow from 'https://cyberbotics.com/wwi/R2025a/RobotWindow.js';
+
+        // ==========================================
+        // GLOBAL STATE
+        // ==========================================
+        window.robotWindow = null;
+        window.isPlaying = false;
+        window.isConnected = false;
+        window.currentTab = 'homeTab';
+        window.deviceWidgets = {
+            distanceSensor: {},
+            positionSensor: {},
+            motor: {}
+        };
+
+        // Clawbot joint names (master joints only for monitoring)
+        const JOINT_NAMES = [
+            'front_left_wheel_joint', 'front_right_wheel_joint',
+            'rear_left_wheel_joint', 'rear_right_wheel_joint',
+            'arm1_joint', 'gripper_2l_joint'
+        ];
+
+        // Motor names for the motor tab
+        const MOTOR_NAMES = [
+            'front_left_wheel_joint', 'front_right_wheel_joint',
+            'rear_left_wheel_joint', 'rear_right_wheel_joint',
+            'arm1_joint', 'arm2_joint', 'gripper1_joint',
+            'gripper_2l_joint', 'gripper_2r_joint'
+        ];
+
+        // ==========================================
+        // TIMEPLOT CLASS
+        // ==========================================
+        class TimePlot {
+            constructor(canvas, options = {}) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.data = [];
+                this.maxPoints = options.maxPoints || 100;
+                this.minY = options.minY !== undefined ? options.minY : -6.28;
+                this.maxY = options.maxY !== undefined ? options.maxY : 6.28;
+                this.lineColor = options.lineColor || '#3182ce';
+                this.gridColor = options.gridColor || '#e2e8f0';
+                this.enabled = true;
+                this.initialized = false;
+            }
+
+            addPoint(value) {
+                if (!this.enabled) return;
+                if (!this.initialized) { this.resize(); this.initialized = true; }
+                this.data.push(value);
+                if (this.data.length > this.maxPoints) this.data.shift();
+                this.draw();
+            }
+
+            draw() {
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                if (w === 0 || h === 0) return;
+
+                this.ctx.clearRect(0, 0, w, h);
+                this.ctx.fillStyle = 'white';
+                this.ctx.fillRect(0, 0, w, h);
+
+                // Grid
+                this.ctx.strokeStyle = this.gridColor;
+                this.ctx.lineWidth = 0.5;
+                for (let i = 0; i <= 4; i++) {
+                    const y = (h / 4) * i;
+                    this.ctx.beginPath(); this.ctx.moveTo(0, y); this.ctx.lineTo(w, y); this.ctx.stroke();
+                }
+
+                // Zero line
+                const zeroY = h - ((0 - this.minY) / (this.maxY - this.minY)) * h;
+                this.ctx.strokeStyle = '#cbd5e1';
+                this.ctx.lineWidth = 1;
+                this.ctx.setLineDash([5, 5]);
+                this.ctx.beginPath(); this.ctx.moveTo(0, zeroY); this.ctx.lineTo(w, zeroY); this.ctx.stroke();
+                this.ctx.setLineDash([]);
+
+                // Data line
+                if (this.data.length > 1) {
+                    this.ctx.strokeStyle = this.lineColor;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.beginPath();
+                    for (let i = 0; i < this.data.length; i++) {
+                        const x = (w / this.maxPoints) * i;
+                        const normalizedY = (this.data[i] - this.minY) / (this.maxY - this.minY);
+                        const y = h - normalizedY * h;
+                        if (i === 0) this.ctx.moveTo(x, y);
+                        else this.ctx.lineTo(x, y);
+                    }
+                    this.ctx.stroke();
+                }
+
+                // Current point dot
+                if (this.data.length > 0) {
+                    const lastValue = this.data[this.data.length - 1];
+                    const x = (w / this.maxPoints) * (this.data.length - 1);
+                    const normalizedY = (lastValue - this.minY) / (this.maxY - this.minY);
+                    const y = h - normalizedY * h;
+                    this.ctx.fillStyle = this.lineColor;
+                    this.ctx.beginPath(); this.ctx.arc(x, y, 4, 0, Math.PI * 2); this.ctx.fill();
+                }
+            }
+
+            resize() {
+                const container = this.canvas.parentElement;
+                if (container) {
+                    const rect = container.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        this.canvas.width = rect.width;
+                        this.canvas.height = rect.height;
+                        this.draw();
+                    }
+                }
+            }
+
+            clear() { this.data = []; this.draw(); }
+        }
+
+        // ==========================================
+        // DEVICE WIDGET CLASS
+        // ==========================================
+        class DeviceWidget {
+            constructor(type, key, displayName, container, options = {}) {
+                this.type = type;
+                this.key = key;
+                this.displayName = displayName;
+                this.enabled = true;
+                this.value = 0;
+                this.plot = null;
+                this.resizeObserver = null;
+
+                this.element = document.createElement('div');
+                this.element.className = 'device-card';
+                this.element.innerHTML = `
+                    <h2>
+                        <input type="checkbox" class="device-checkbox" checked
+                               onchange="toggleDevice('${type}', '${key}', this.checked)">
+                        ${displayName}: <span class="value">0.000</span>
+                    </h2>
+                    <div class="plot-container">
+                        <canvas class="plot-canvas"></canvas>
+                    </div>
+                    <div class="device-buttons-row">
+                        <button class="device-small-btn" onclick="resetDevicePlot('${type}', '${key}')">Reset Plot</button>
+                    </div>
+                `;
+                container.appendChild(this.element);
+
+                const canvas = this.element.querySelector('.plot-canvas');
+                this.plot = new TimePlot(canvas, {
+                    minY: options.minY !== undefined ? options.minY : -6.28,
+                    maxY: options.maxY !== undefined ? options.maxY : 6.28,
+                    lineColor: options.lineColor || '#3182ce'
+                });
+
+                const self = this;
+                const plotContainer = this.element.querySelector('.plot-container');
+                if (window.ResizeObserver && plotContainer) {
+                    this.resizeObserver = new ResizeObserver(entries => {
+                        for (let entry of entries) {
+                            const { width, height } = entry.contentRect;
+                            if (width > 10 && height > 10) self.resize();
+                        }
+                    });
+                    this.resizeObserver.observe(plotContainer);
+                }
+                this.tryResize();
+            }
+
+            tryResize() {
+                const self = this;
+                [50, 100, 200, 400, 800, 1500].forEach(delay => { setTimeout(() => self.resize(), delay); });
+            }
+
+            update(value) {
+                this.value = value;
+                if (this.enabled && !isNaN(value)) {
+                    this.element.querySelector('.value').textContent = value.toFixed(3);
+                    this.plot.addPoint(value);
+                }
+            }
+
+            enable(enabled) {
+                this.enabled = enabled;
+                this.element.querySelector('.device-checkbox').checked = enabled;
+                this.plot.enabled = enabled;
+            }
+
+            resize() {
+                if (this.plot) {
+                    const container = this.element.querySelector('.plot-container');
+                    if (container) {
+                        const rect = container.getBoundingClientRect();
+                        if (rect.width > 10 && rect.height > 10) {
+                            this.plot.canvas.width = rect.width;
+                            this.plot.canvas.height = rect.height;
+                            this.plot.draw();
+                        }
+                    }
+                }
+            }
+
+            resetPlot() { if (this.plot) this.plot.clear(); }
+        }
+
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
+        function initNhanUI() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const robotName = urlParams.get('name') || 'Clawbot';
+            const robotNameEl = document.getElementById('robotNameDisplay');
+            if (robotNameEl) robotNameEl.textContent = robotName;
+
+            window.robotWindow = new RobotWindow();
+            window.robotWindow.receive = receive;
+            window.robotWindow.setTitle(robotName + ' - NhanUI Control');
+
+            createDeviceWidgets();
+            if (Object.keys(window.deviceWidgets.positionSensor).length === 0) {
+                setTimeout(createDeviceWidgets, 200);
+                setTimeout(createDeviceWidgets, 500);
+                setTimeout(createDeviceWidgets, 1000);
+            }
+
+            window.addEventListener('resize', resizeAllPlots);
+            addLog('NhanUI v2.0 initialized', 'success');
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initNhanUI);
+        } else {
+            initNhanUI();
+        }
+
+        function createDeviceWidgets() {
+            if (Object.keys(window.deviceWidgets.positionSensor).length > 0) return;
+
+            // Distance sensor
+            const dsContainer = document.getElementById('distanceSensorDevices');
+            if (dsContainer && !dsContainer.hasChildNodes()) {
+                window.deviceWidgets.distanceSensor['distance_sensor'] = new DeviceWidget(
+                    'distanceSensor', 'distance_sensor', 'Distance Sensor', dsContainer,
+                    { minY: 0, maxY: 1000, lineColor: '#e74c3c' }
+                );
+            }
+
+            // Position sensors — master joints
+            const psContainer = document.getElementById('positionSensorDevices');
+            if (psContainer) {
+                psContainer.innerHTML = '';
+                JOINT_NAMES.forEach(joint => {
+                    const displayName = joint.replace(/_joint$/, '').replace(/_/g, ' ');
+                    const isWheel = joint.includes('wheel');
+                    window.deviceWidgets.positionSensor[joint] = new DeviceWidget(
+                        'positionSensor', joint, displayName, psContainer,
+                        { minY: isWheel ? -100 : -3.14, maxY: isWheel ? 100 : 3.14, lineColor: '#3182ce' }
+                    );
+                });
+            }
+
+            // Motors
+            const motorContainer = document.getElementById('motorDevices');
+            if (motorContainer) {
+                motorContainer.innerHTML = '';
+                MOTOR_NAMES.forEach(joint => {
+                    const displayName = joint.replace(/_joint$/, '').replace(/_/g, ' ');
+                    const isWheel = joint.includes('wheel');
+                    const isGripper = joint.includes('gripper');
+                    let color = '#38a169';
+                    if (isWheel) color = '#4299e1';
+                    if (isGripper) color = '#805ad5';
+                    window.deviceWidgets.motor[joint] = new DeviceWidget(
+                        'motor', joint, displayName, motorContainer,
+                        { minY: isWheel ? -10 : (isGripper ? -1 : -3.14), maxY: isWheel ? 10 : (isGripper ? 1 : 3.14), lineColor: color }
+                    );
+                });
+            }
+
+            setTimeout(resizeAllPlots, 100);
+            setTimeout(resizeAllPlots, 300);
+            setTimeout(resizeAllPlots, 1000);
+        }
+
+        function resizeAllPlots() {
+            Object.values(window.deviceWidgets).forEach(typeWidgets => {
+                Object.values(typeWidgets).forEach(widget => { if (widget && widget.resize) widget.resize(); });
+            });
+        }
+
+        function resizeTabWidgets(tabId) {
+            let typeToResize = null;
+            if (tabId === 'distanceSensorTab') typeToResize = 'distanceSensor';
+            else if (tabId === 'positionSensorTab') typeToResize = 'positionSensor';
+            else if (tabId === 'motorTab') typeToResize = 'motor';
+            if (typeToResize && window.deviceWidgets[typeToResize]) {
+                Object.values(window.deviceWidgets[typeToResize]).forEach(widget => { if (widget && widget.resize) widget.resize(); });
+            }
+        }
+
+        // ==========================================
+        // TAB SWITCHING
+        // ==========================================
+        function switchTabReal(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            const tabEl = document.getElementById(tabId);
+            if (tabEl) tabEl.classList.add('active');
+            if (btn) btn.classList.add('active');
+            window.currentTab = tabId;
+            [50, 100, 200, 400, 800].forEach(delay => {
+                setTimeout(() => { resizeTabWidgets(tabId); resizeAllPlots(); }, delay);
+            });
+        }
+        window._switchTabReal = switchTabReal;
+        window.switchTab = switchTabReal;
+
+        function toggleSidebarReal() {
+            var sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.toggle('collapsed');
+            setTimeout(resizeAllPlots, 300);
+        }
+        window._toggleSidebarReal = toggleSidebarReal;
+        window.toggleSidebar = toggleSidebarReal;
+
+        // ==========================================
+        // DEVICE CONTROL
+        // ==========================================
+        window.toggleDevice = function(type, name, enabled) {
+            if (window.deviceWidgets[type] && window.deviceWidgets[type][name])
+                window.deviceWidgets[type][name].enable(enabled);
+        };
+
+        window.enableAllDevices = function(type, enabled) {
+            if (type) {
+                Object.values(window.deviceWidgets[type]).forEach(w => w.enable(enabled));
+            } else {
+                Object.values(window.deviceWidgets).forEach(tw => Object.values(tw).forEach(w => w.enable(enabled)));
+            }
+        };
+
+        window.resetDevicePlot = function(type, name) {
+            if (window.deviceWidgets[type] && window.deviceWidgets[type][name])
+                window.deviceWidgets[type][name].resetPlot();
+        };
+
+        // ==========================================
+        // WWI COMMUNICATION
+        // ==========================================
+        let statusCount = 0;
+        function receive(message, robot) {
+            if (message === 'STATUS:READY') {
+                window.isConnected = true;
+                updateConnectionStatus(true);
+                addLog('Connected to robot controller', 'success');
+                return;
+            }
+
+            if (message.startsWith('STATUS:')) {
+                try {
+                    const status = JSON.parse(message.substring(7));
+                    updateStatus(status);
+                    if (statusCount < 3) { console.log('Received status:', status); statusCount++; }
+                } catch (e) { console.error('Failed to parse status:', e); }
+                return;
+            }
+
+            if (message.startsWith('CAMERAS:')) {
+                try { setupCameras(JSON.parse(message.substring(8))); }
+                catch (e) { console.error('Failed to parse cameras info:', e); }
+                return;
+            }
+
+            if (message.startsWith('CAMERA:')) {
+                const rest = message.substring(7);
+                const colonIndex = rest.indexOf(':');
+                if (colonIndex > 0) {
+                    updateCameraFeed(rest.substring(0, colonIndex), rest.substring(colonIndex + 1));
+                } else {
+                    updateCameraFeed('camera', rest);
+                }
+                return;
+            }
+
+            // Backwards compatibility with simple TIME: messages
+            if (message.startsWith('TIME:')) {
+                const t = parseFloat(message.substring(5));
+                if (!isNaN(t)) {
+                    document.getElementById('simTimeValue').textContent = t.toFixed(2) + 's';
+                    document.getElementById('timerDisplay').textContent = t.toFixed(2) + 's';
+                }
+                return;
+            }
+
+            if (message.startsWith('ERROR:')) {
+                addLog('Error: ' + message.substring(6), 'error');
+                return;
+            }
+        }
+
+        window.sendCommand = function(cmd) {
+            if (window.robotWindow) {
+                window.robotWindow.send(cmd);
+                addLog('Sent: ' + cmd);
+            }
+        };
+
+        // ==========================================
+        // STATUS UPDATE
+        // ==========================================
+        function updateStatus(status) {
+            if (!window.isConnected) { window.isConnected = true; updateConnectionStatus(true); }
+
+            if (status.distance !== undefined) {
+                const distVal = status.distance < 99999 ? status.distance.toFixed(1) + ' mm' : '--';
+                document.getElementById('distanceValue').textContent = distVal;
+                if (window.deviceWidgets.distanceSensor['distance_sensor'])
+                    window.deviceWidgets.distanceSensor['distance_sensor'].update(status.distance);
+            }
+
+            if (status.state)
+                document.getElementById('stateValue').textContent = status.state;
+
+            if (status.time !== undefined) {
+                document.getElementById('simTimeValue').textContent = status.time.toFixed(2) + 's';
+                document.getElementById('timerDisplay').textContent = status.time.toFixed(2) + 's';
+            }
+
+            // Update joint position sensors
+            if (status.joints) {
+                for (const [joint, value] of Object.entries(status.joints)) {
+                    if (window.deviceWidgets.positionSensor[joint])
+                        window.deviceWidgets.positionSensor[joint].update(value);
+                }
+            }
+
+            // Update motor targets
+            if (status.motors) {
+                for (const [motor, value] of Object.entries(status.motors)) {
+                    if (window.deviceWidgets.motor[motor])
+                        window.deviceWidgets.motor[motor].update(value);
+                }
+            } else if (status.joints) {
+                for (const [joint, value] of Object.entries(status.joints)) {
+                    if (window.deviceWidgets.motor[joint])
+                        window.deviceWidgets.motor[joint].update(value);
+                }
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const el = document.getElementById('connectionStatus');
+            el.textContent = connected ? 'Connected' : 'Disconnected';
+            el.className = connected ? 'connected' : 'disconnected';
+        }
+
+        // ==========================================
+        // SIMULATION CONTROL
+        // ==========================================
+        window.simControl = function(action) {
+            if (action === 'TOGGLE') {
+                if (window.isPlaying) {
+                    sendCommand('CMD:PAUSE');
+                    window.isPlaying = false;
+                    document.getElementById('btnPlay').innerHTML = '&#9654;';
+                    document.getElementById('modeValue').textContent = 'PAUSED';
+                } else {
+                    sendCommand('CMD:PLAY');
+                    window.isPlaying = true;
+                    document.getElementById('btnPlay').innerHTML = '&#9208;';
+                    document.getElementById('modeValue').textContent = 'RUNNING';
+                }
+            } else if (action === 'RESET') {
+                sendCommand('CMD:RESET');
+                window.isPlaying = true;
+                document.getElementById('btnPlay').innerHTML = '&#9208;';
+                document.getElementById('modeValue').textContent = 'READY';
+                document.getElementById('timerDisplay').textContent = '0.00s';
+                addLog('Reset robot', 'success');
+            }
+        };
+
+        window.updateSpeed = function(value) {
+            document.getElementById('speedValue').textContent = value + '%';
+            sendCommand('SPEED:' + value);
+        };
+
+        // ==========================================
+        // CODE EXECUTION & PRESETS
+        // ==========================================
+        window.runCode = function() {
+            const code = document.getElementById('codeEditor').value.trim();
+            if (!code) { addLog('No code to run', 'error'); return; }
+            sendCommand('CODE:' + code);
+            addLog('Code sent to robot');
+        };
+
+        window.clearCode = function() { document.getElementById('codeEditor').value = ''; };
+
+        window.runPreset = function(preset) {
+            const presets = {
+                'grasp': `robot.open_gripper(-10)
+delay(0.5)
+robot.close_gripper(30)
+delay(1)
+robot.open_gripper(-10)`,
+
+                'demo1': `# Demo 1: Di chuyen theo hinh vuong
+# Move in a square pattern
+for i in range(4):
+    robot.go_forward(50)
+    delay(2)
+    robot.turn_right(50)
+    delay(0.85)
+    while_tick()
+robot.go_forward(0)
+delay(0.5)`,
+
+                'demo2': `# Demo 2: Tien toi, gap vat, di chuyen va tha
+# Move forward, grasp object, move and release
+robot.open_gripper(-10)
+delay(0.5)
+robot.arm_down(45)
+delay(1)
+robot.go_forward(50)
+delay(2)
+robot.go_forward(0)
+delay(0.5)
+robot.close_gripper(30)
+delay(1)
+robot.arm_up(0)
+delay(1)
+robot.go_forward(50)
+delay(3)
+robot.go_forward(0)
+delay(0.5)
+robot.arm_down(45)
+delay(1)
+robot.open_gripper(-10)
+delay(1)
+robot.arm_up(0)
+delay(0.5)
+robot.go_backward(50)
+delay(2)
+robot.go_backward(0)`
+            };
+
+            if (presets[preset]) {
+                document.getElementById('codeEditor').value = presets[preset];
+                addLog('Loaded preset: ' + preset);
+            }
+        };
+
+        // ==========================================
+        // LOGGING
+        // ==========================================
+        function addLog(message, type = '') {
+            const log = document.getElementById('consoleLog');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry ' + type;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            while (log.children.length > 50) log.removeChild(log.firstChild);
+        }
+
+        // ==========================================
+        // CAMERA FUNCTIONS
+        // ==========================================
+        window.cameraEnabled = true;
+        window.cameraData = {};
+        window.knownCameras = {};
+        window.cameraSettings = {
+            resolution: '320x240', targetFps: 20, quality: 60, frameSkip: 1, frameCounter: 0
+        };
+
+        function sendCameraSettings() {
+            const settings = window.cameraSettings;
+            const [width, height] = settings.resolution.split('x').map(Number);
+            const msg = `CAMERA_SETTINGS:${JSON.stringify({ width, height, fps: settings.targetFps, quality: settings.quality, frameSkip: settings.frameSkip })}`;
+            if (window.robotWindow) { window.robotWindow.send(msg); addLog(`Camera settings updated`, 'success'); }
+            updatePerfBadge();
+        }
+
+        function updatePerfBadge() {
+            const badge = document.getElementById('cameraPerfBadge');
+            if (!badge) return;
+            const settings = window.cameraSettings;
+            const [width] = settings.resolution.split('x').map(Number);
+            const loadScore = (width / 160) * (settings.targetFps / 10) * (settings.quality / 60) / (settings.frameSkip + 1);
+            if (loadScore <= 1) { badge.className = 'camera-perf-badge low'; badge.textContent = 'Low CPU'; }
+            else if (loadScore <= 2.5) { badge.className = 'camera-perf-badge medium'; badge.textContent = 'Medium CPU'; }
+            else { badge.className = 'camera-perf-badge high'; badge.textContent = 'High CPU'; }
+        }
+
+        window.changeCameraFps = function(v) { window.cameraSettings.targetFps = parseInt(v); sendCameraSettings(); };
+        window.changeCameraQuality = function(v) {
+            window.cameraSettings.quality = parseInt(v);
+            document.getElementById('cameraQualityValue').textContent = v + '%';
+            sendCameraSettings();
+        };
+        window.changeCameraFrameSkip = function(v) { window.cameraSettings.frameSkip = parseInt(v); sendCameraSettings(); };
+
+        window.toggleCameraFullscreen = function(cameraName) {
+            const card = document.getElementById(`cameraCard_${cameraName}`);
+            if (!card) return;
+            if (card.classList.contains('fullscreen')) { card.classList.remove('fullscreen'); document.body.style.overflow = ''; }
+            else { card.classList.add('fullscreen'); document.body.style.overflow = 'hidden'; }
+        };
+
+        function setupCameras(camerasInfo) {
+            window.knownCameras = camerasInfo;
+            const container = document.getElementById('cameraContainer');
+            if (!container) return;
+            const placeholder = document.getElementById('cameraPlaceholderCard');
+            if (placeholder) placeholder.remove();
+            const cameraNames = Object.keys(camerasInfo);
+            if (cameraNames.length === 0) {
+                container.innerHTML = `<div class="camera-card"><h2>No cameras found</h2><div class="camera-view"><div class="camera-placeholder-inner"><span>&#128247;</span><span>No camera devices detected</span></div></div></div>`;
+                return;
+            }
+            container.innerHTML = '';
+            cameraNames.forEach(camName => {
+                const card = createCameraCard(camName, camerasInfo[camName]);
+                container.appendChild(card);
+                window.cameraData[camName] = { frameCount: 0, lastTime: Date.now(), firstFrame: true };
+            });
+            addLog(`Detected ${cameraNames.length} camera(s): ${cameraNames.join(', ')}`, 'success');
+            setTimeout(sendCameraSettings, 500);
+        }
+
+        function createCameraCard(cameraName, cameraInfo) {
+            const card = document.createElement('div');
+            card.className = 'camera-card';
+            card.id = `cameraCard_${cameraName}`;
+            const displayName = cameraName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            const resolution = cameraInfo ? `${cameraInfo.width}x${cameraInfo.height}` : '---';
+            card.innerHTML = `
+                <h2>${displayName}</h2>
+                <div class="camera-view">
+                    <img id="cameraFeed_${cameraName}" alt="${displayName}">
+                    <div id="cameraPlaceholder_${cameraName}" class="camera-placeholder-inner">
+                        <span>&#128247;</span><span>Waiting for data...</span>
+                    </div>
+                </div>
+                <div class="camera-info">
+                    <div class="camera-info-row">
+                        <span id="cameraResolution_${cameraName}">Resolution: ${resolution}</span>
+                        <span id="cameraFPS_${cameraName}">FPS: --</span>
+                    </div>
+                    <div class="camera-info-row">
+                        <button class="camera-snapshot-btn" onclick="saveSingleCameraSnapshot('${cameraName}')">Snapshot</button>
+                        <button class="camera-fullscreen-btn" onclick="toggleCameraFullscreen('${cameraName}')">Fullscreen</button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function updateCameraFeed(cameraName, base64Data) {
+            if (!window.cameraEnabled) return;
+            window.cameraSettings.frameCounter++;
+            if (window.cameraSettings.frameSkip > 0 && window.cameraSettings.frameCounter % (window.cameraSettings.frameSkip + 1) !== 0) return;
+
+            updateHomeCameraFeed(cameraName, base64Data);
+
+            if (!window.cameraData[cameraName]) {
+                const container = document.getElementById('cameraContainer');
+                const placeholderCard = document.getElementById('cameraPlaceholderCard');
+                if (placeholderCard) placeholderCard.remove();
+                if (!document.getElementById(`cameraCard_${cameraName}`)) {
+                    container.appendChild(createCameraCard(cameraName, null));
+                }
+                window.cameraData[cameraName] = { frameCount: 0, lastTime: Date.now(), firstFrame: true };
+            }
+
+            const img = document.getElementById(`cameraFeed_${cameraName}`);
+            const placeholder = document.getElementById(`cameraPlaceholder_${cameraName}`);
+            if (img && base64Data) {
+                img.src = 'data:image/jpeg;base64,' + base64Data;
+                img.classList.add('loaded');
+                if (placeholder) placeholder.style.display = 'none';
+                const camData = window.cameraData[cameraName];
+                if (camData.firstFrame) {
+                    camData.firstFrame = false;
+                    addLog(`Camera '${cameraName}' feed started`, 'success');
+                    img.onload = function() {
+                        const resEl = document.getElementById(`cameraResolution_${cameraName}`);
+                        if (resEl) resEl.textContent = `Resolution: ${img.naturalWidth}x${img.naturalHeight}`;
+                    };
+                }
+                camData.frameCount++;
+                const now = Date.now();
+                if (now - camData.lastTime >= 1000) {
+                    const fpsEl = document.getElementById(`cameraFPS_${cameraName}`);
+                    if (fpsEl) fpsEl.textContent = 'FPS: ' + camData.frameCount;
+                    camData.frameCount = 0;
+                    camData.lastTime = now;
+                }
+            }
+        }
+
+        window.homeCameraData = { frameCount: 0, lastTime: Date.now(), firstFrame: true };
+        function updateHomeCameraFeed(cameraName, base64Data) {
+            const cameraNames = Object.keys(window.cameraData || {});
+            if (cameraNames.length > 0 && cameraNames[0] !== cameraName && cameraNames.includes(cameraName)) return;
+            const img = document.getElementById('homeCameraFeed');
+            const placeholder = document.getElementById('homeCameraPlaceholder');
+            const fpsEl = document.getElementById('homeCameraFPS');
+            if (img && base64Data) {
+                img.src = 'data:image/jpeg;base64,' + base64Data;
+                img.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+                if (window.homeCameraData.firstFrame) {
+                    window.homeCameraData.firstFrame = false;
+                    img.onload = function() {
+                        const resEl = document.getElementById('homeCameraResolution');
+                        if (resEl) resEl.textContent = `Resolution: ${img.naturalWidth}x${img.naturalHeight}`;
+                    };
+                }
+                window.homeCameraData.frameCount++;
+                const now = Date.now();
+                if (now - window.homeCameraData.lastTime >= 1000) {
+                    if (fpsEl) fpsEl.textContent = 'FPS: ' + window.homeCameraData.frameCount;
+                    window.homeCameraData.frameCount = 0;
+                    window.homeCameraData.lastTime = now;
+                }
+            }
+        }
+
+        window.toggleCameraFeed = function() {
+            window.cameraEnabled = !window.cameraEnabled;
+            const btn = document.getElementById('cameraToggleBtn');
+            if (btn) btn.textContent = window.cameraEnabled ? 'Pause' : 'Resume';
+            addLog('All cameras ' + (window.cameraEnabled ? 'resumed' : 'paused'));
+        };
+
+        window.saveSingleCameraSnapshot = function(cameraName) {
+            const img = document.getElementById(`cameraFeed_${cameraName}`);
+            if (img && img.src && img.src.startsWith('data:image')) {
+                const link = document.createElement('a');
+                link.download = `${cameraName}_snapshot_${Date.now()}.jpg`;
+                link.href = img.src;
+                link.click();
+                addLog(`Snapshot saved: ${cameraName}`, 'success');
+            } else { addLog(`No image from ${cameraName}`, 'error'); }
+        };
+
+        window.saveAllCameraSnapshots = function() {
+            const cameraNames = Object.keys(window.cameraData);
+            if (cameraNames.length === 0) { addLog('No cameras available', 'error'); return; }
+            let saved = 0;
+            cameraNames.forEach(camName => {
+                const img = document.getElementById(`cameraFeed_${camName}`);
+                if (img && img.src && img.src.startsWith('data:image')) {
+                    const link = document.createElement('a');
+                    link.download = `${camName}_snapshot_${Date.now()}.jpg`;
+                    link.href = img.src;
+                    link.click();
+                    saved++;
+                }
+            });
+            addLog(saved > 0 ? `Saved ${saved} snapshot(s)` : 'No camera images available', saved > 0 ? 'success' : 'error');
+        };
+
+        setTimeout(updatePerfBadge, 100);
+    </script>
+</body>
+</html>

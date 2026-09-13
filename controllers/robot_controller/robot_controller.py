@@ -4,6 +4,7 @@ Robot Controller for ROBO_001 (DienBien Robot) — NhanUI Edition
 - Camera streaming via base64 JPEG
 - Mimic joint synchronization for parallel linkage mechanism
 - Manual control commands (movement, arm, gripper) from dashboard
+- Sim-to-Real bridge integration for hardware robot control
 """
 
 from controller import Supervisor
@@ -11,6 +12,13 @@ import sys
 import time
 import json
 import base64
+
+# Sim-to-Real bridge (imported safely — won't crash if websockets missing)
+try:
+    from sim2real_client import HardwareBridge, get_bridge
+    hw_bridge = get_bridge()
+except Exception:
+    hw_bridge = None
 
 robot = Supervisor()
 timeStep = int(robot.getBasicTimeStep())
@@ -230,22 +238,27 @@ class DriveAPI:
 
     def stop(self):
         self._set_wheels_percent(0.0, 0.0)
+        if hw_bridge: hw_bridge.send("stop")
 
     def go_forward(self, speed):
         s = self._clamp_percent(speed)
         self._set_wheels_percent(s, s)
+        if hw_bridge: hw_bridge.send("go_forward", speed=s)
 
     def go_backward(self, speed):
         s = self._clamp_percent(speed)
         self._set_wheels_percent(-s, -s)
+        if hw_bridge: hw_bridge.send("go_backward", speed=s)
 
     def turn_left(self, speed):
         s = self._clamp_percent(speed)
         self._set_wheels_percent(-s, s)
+        if hw_bridge: hw_bridge.send("turn_left", speed=s)
 
     def turn_right(self, speed):
         s = self._clamp_percent(speed)
         self._set_wheels_percent(s, -s)
+        if hw_bridge: hw_bridge.send("turn_right", speed=s)
 
     def delay(self, seconds):
         try: target = float(seconds)
@@ -263,24 +276,28 @@ class DriveAPI:
             target_rad = float(angle_degrees) * DEG_TO_RAD
             arm1_motor.setPosition(target_rad)
             _sync_mimic_joints("arm1_joint", target_rad)
+        if hw_bridge: hw_bridge.send("arm_up", angle=float(angle_degrees))
 
     def arm_down(self, angle_degrees=45):
         if arm1_motor:
             target_rad = float(angle_degrees) * DEG_TO_RAD
             arm1_motor.setPosition(target_rad)
             _sync_mimic_joints("arm1_joint", target_rad)
+        if hw_bridge: hw_bridge.send("arm_down", angle=float(angle_degrees))
 
     def close_gripper(self, angle_degrees=30):
         if gripper_2l_motor:
             target_rad = float(angle_degrees) * DEG_TO_RAD
             gripper_2l_motor.setPosition(target_rad)
             _sync_mimic_joints("gripper_2l_joint", target_rad)
+        if hw_bridge: hw_bridge.send("close_gripper", angle=float(angle_degrees))
 
     def open_gripper(self, angle_degrees=-10):
         if gripper_2l_motor:
             target_rad = float(angle_degrees) * DEG_TO_RAD
             gripper_2l_motor.setPosition(target_rad)
             _sync_mimic_joints("gripper_2l_joint", target_rad)
+        if hw_bridge: hw_bridge.send("open_gripper", angle=float(angle_degrees))
 
 drive = DriveAPI(robot)
 
@@ -392,6 +409,25 @@ def apply_wwi_message(msg):
             camera_frame_skip = settings.get("frameSkip", 5)
             camera_jpeg_quality = settings.get("quality", 60)
         except: pass
+        return None
+
+    # Sim-to-Real bridge control
+    if msg == "SIM2REAL:ON":
+        if hw_bridge:
+            hw_bridge.enabled = True
+            print(f"[{robot_name}] Sim-to-Real bridge ENABLED")
+        return None
+    if msg == "SIM2REAL:OFF":
+        if hw_bridge:
+            hw_bridge.enabled = False
+            print(f"[{robot_name}] Sim-to-Real bridge DISABLED")
+        return None
+    if msg == "SIM2REAL:STATUS":
+        if hw_bridge:
+            status = hw_bridge.get_status()
+            robot.wwiSendText("SIM2REAL:" + json.dumps(status))
+        else:
+            robot.wwiSendText("SIM2REAL:" + json.dumps({"enabled": False, "bridge_connected": False, "hardware_connected": False}))
         return None
 
     return None
@@ -541,6 +577,7 @@ robot.open_gripper = myRobot.open_gripper
 def delay(seconds): drive.delay(seconds)
 def stop_all():
     drive._set_wheels_percent(0.0, 0.0)
+    if hw_bridge: hw_bridge.send("stop")
     raise Exception("STOP_ALL")
 def while_tick():
     check_interrupt()

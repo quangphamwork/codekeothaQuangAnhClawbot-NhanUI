@@ -881,6 +881,40 @@
 
             <!-- SETTINGS TAB -->
             <div id="settingsTab" class="tab-content">
+                <!-- Sim-to-Real Section -->
+                <div class="settings-section" style="border: 2px solid #4299e1; max-width: 550px;">
+                    <h2 style="color: #4299e1;">Sim-to-Real Bridge</h2>
+                    <div class="settings-row">
+                        <label>Sim-to-Real:</label>
+                        <button id="sim2realToggleBtn" class="header-btn" onclick="toggleSim2Real()" style="background:#e53e3e;color:white;min-width:80px;">OFF</button>
+                        <span id="sim2realStatusDot" style="width:12px;height:12px;border-radius:50%;background:#e53e3e;display:inline-block;"></span>
+                        <span id="sim2realStatusText" style="font-size:12px;color:#718096;">Disabled</span>
+                    </div>
+                    <div class="settings-row">
+                        <label>Bridge Server:</label>
+                        <span id="bridgeConnStatus" style="font-size:12px;color:#718096;">--</span>
+                    </div>
+                    <div class="settings-row">
+                        <label>Hardware (ESP32):</label>
+                        <span id="hwConnStatus" style="font-size:12px;color:#718096;">--</span>
+                    </div>
+                    <div class="settings-row">
+                        <label>Commands sent:</label>
+                        <span id="sim2realCmdCount" style="font-size:12px;font-weight:700;color:#2d3748;">0</span>
+                    </div>
+                    <div class="settings-row">
+                        <label>Last command:</label>
+                        <span id="sim2realLastCmd" style="font-size:12px;font-family:'Courier New',monospace;color:#4299e1;">--</span>
+                    </div>
+                    <div style="margin-top:10px;padding:10px;background:rgba(66,153,225,0.1);border-radius:8px;font-size:11px;color:#4a5568;">
+                        <strong>Setup:</strong><br>
+                        1. <code>pip install websockets</code><br>
+                        2. Run <code>python sim2real/bridge_server.py</code><br>
+                        3. Flash ESP32 with <code>sim2real/esp32_firmware/</code><br>
+                        4. Toggle Sim-to-Real ON above
+                    </div>
+                </div>
+
                 <div class="settings-section">
                     <h2>General Settings</h2>
                     <div class="settings-row">
@@ -901,7 +935,7 @@
                 <div class="settings-section">
                     <h2>About</h2>
                     <div class="settings-row"><span>NhanUI v2.0.0 - Custom Robot Window for Clawbot</span></div>
-                    <div class="settings-row"><span>Combines WWI control interface with device monitoring graphs</span></div>
+                    <div class="settings-row"><span>Sim-to-Real bridge for ESP32-S3 hardware control</span></div>
                 </div>
             </div>
         </div>
@@ -1310,7 +1344,77 @@
                 addLog('Error: ' + message.substring(6), 'error');
                 return;
             }
+
+            // Sim-to-Real status
+            if (message.startsWith('SIM2REAL:')) {
+                try {
+                    const s2r = JSON.parse(message.substring(9));
+                    updateSim2RealUI(s2r);
+                } catch (e) {}
+                return;
+            }
         }
+
+        // ==========================================
+        // SIM-TO-REAL UI
+        // ==========================================
+        window.sim2realEnabled = false;
+
+        window.toggleSim2Real = function() {
+            window.sim2realEnabled = !window.sim2realEnabled;
+            sendCommand(window.sim2realEnabled ? 'SIM2REAL:ON' : 'SIM2REAL:OFF');
+            const btn = document.getElementById('sim2realToggleBtn');
+            if (window.sim2realEnabled) {
+                btn.textContent = 'ON';
+                btn.style.background = '#48bb78';
+                addLog('Sim-to-Real enabled', 'success');
+            } else {
+                btn.textContent = 'OFF';
+                btn.style.background = '#e53e3e';
+                addLog('Sim-to-Real disabled');
+            }
+            // Poll status
+            setTimeout(() => sendCommand('SIM2REAL:STATUS'), 500);
+        };
+
+        function updateSim2RealUI(status) {
+            const dot = document.getElementById('sim2realStatusDot');
+            const text = document.getElementById('sim2realStatusText');
+            const bridgeEl = document.getElementById('bridgeConnStatus');
+            const hwEl = document.getElementById('hwConnStatus');
+            const cmdEl = document.getElementById('sim2realCmdCount');
+            const lastEl = document.getElementById('sim2realLastCmd');
+
+            if (status.enabled) {
+                if (status.hardware_connected) {
+                    dot.style.background = '#48bb78';
+                    text.textContent = 'Connected to hardware';
+                } else if (status.bridge_connected) {
+                    dot.style.background = '#ed8936';
+                    text.textContent = 'Bridge OK, waiting for ESP32...';
+                } else {
+                    dot.style.background = '#e53e3e';
+                    text.textContent = 'Bridge not connected';
+                }
+            } else {
+                dot.style.background = '#a0aec0';
+                text.textContent = 'Disabled';
+            }
+
+            bridgeEl.textContent = status.bridge_connected ? 'Connected' : 'Not connected';
+            bridgeEl.style.color = status.bridge_connected ? '#48bb78' : '#e53e3e';
+            hwEl.textContent = status.hardware_connected ? 'Connected' : 'Not connected';
+            hwEl.style.color = status.hardware_connected ? '#48bb78' : '#e53e3e';
+            if (status.commands_sent !== undefined) cmdEl.textContent = status.commands_sent;
+            if (status.last_command) lastEl.textContent = status.last_command;
+        }
+
+        // Poll sim2real status periodically
+        setInterval(() => {
+            if (window.sim2realEnabled && window.isConnected) {
+                sendCommand('SIM2REAL:STATUS');
+            }
+        }, 3000);
 
         window.sendCommand = function(cmd) {
             if (window.robotWindow) {
